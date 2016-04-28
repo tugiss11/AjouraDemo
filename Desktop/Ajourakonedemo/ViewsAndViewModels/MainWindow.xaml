@@ -1,0 +1,121 @@
+﻿<catel:DataWindow x:Class="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013"
+        xmlns:desktopViewer="clr-namespace:ArcGISRuntime.Samples.DesktopViewer"
+        xmlns:catel="http://catel.codeplex.com"
+        xmlns:viewsAndViewModels="clr-namespace:ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels"
+        Title="Ajourakonedemo"  ShowInTaskbar="True" ResizeMode="CanResize" SizeToContent="Manual" WindowStartupLocation="Manual" WindowState="Maximized">
+
+    <Window.Resources>
+        <viewsAndViewModels:KarttaViewModel x:Key="KarttaViewModel" />
+    </Window.Resources>
+   
+
+    <catel:StackGrid x:Name="LayoutRoot" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="25" />
+        </Grid.RowDefinitions>
+
+        <!-- <StackPanel Grid.Row="0" Orientation="Horizontal">
+           <telerik:RadMenu x:Name="MainMenu">
+                <telerik:RadMenuItem Header="_File">
+                  
+                    <telerik:RadMenuSeparatorItem/>
+                    <telerik:RadMenuItem Header="Restart" InputGestureText="Alt+F1" Click="MenuItem_OnClick__Restart"/>
+                </telerik:RadMenuItem>
+
+            </telerik:RadMenu>
+           
+            <telerik:RadMenu x:Name="Menu2">
+                <telerik:RadMenuItem Header="FeatureLayers" ItemsSource="{Binding MenuItems}">
+                    <telerik:RadMenuItem.ItemContainerStyle>
+                        <Style TargetType="telerik:RadMenuItem">
+                            <Setter Property="Command" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=catel:DataWindow}, Path=ViewModel.OpenFeaturesCommand}" />
+                            <Setter Property="CommandParameter" Value="{Binding}" />
+                            <Setter Property="Header" Value="{Binding Header}" />
+                        </Style>
+                    </telerik:RadMenuItem.ItemContainerStyle>
+                </telerik:RadMenuItem>
+            </telerik:RadMenu>
+        </StackPanel>
+            -->
+
+        <Grid Row="0"> 
+            <Grid.RowDefinitions>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.90*"> </ColumnDefinition>
+                <ColumnDefinition Width="0.10*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+        <viewsAndViewModels:KarttaView 
+            Grid.Row="0" Grid.Column="0"
+            HorizontalContentAlignment="Stretch" 
+            VerticalContentAlignment="Stretch" 
+            VerticalAlignment="Stretch" 
+            HorizontalAlignment="Stretch" 
+            x:Uid="KarttaView" 
+            KarttaViewModel="{StaticResource KarttaViewModel}" />
+            <StackPanel Grid.Row="0" Grid.Column="1">
+               
+                <Label Margin="5, 0, 2, 0" Content="Scale:"></Label>
+                <telerik:RadNumericUpDown Margin="5,0,0,0" Width="100" Value="{Binding Scale}" IsInteger="True" Minimum="0" Maximum="10000000000"></telerik:RadNumericUpDown>
+                <telerik:RadMenuItem Header="Layer Count" Click="MenuItem_OnClick__ShowLayerCount"/>
+                <telerik:RadMenuItem Header="Load Graphics" Command="{Binding LoadLayersCommand}"/>
+                <telerik:RadMenuItem Header="Toggle Graphics" Command="{Binding ToggleGraphicsCommand}"/>
+                <telerik:RadMenuItem Header="Load Graph" Command="{Binding LoadGraphCommand}"/>
+                <telerik:RadMenuItem Header="Minimum Spanning Tree" Command="{Binding MinimumSpanningTreeCommand}"/>
+                <telerik:RadMenuItem Header="Shortest Path" Command="{Binding ShortestPathCommand}"/>
+                <telerik:RadMenuItem Header="Add TSP vertices" Command="{Binding SetTspNodesCommand}"/>
+                <telerik:RadMenuItem Header="TSP on Selected" Command="{Binding TspCommand}"/>
+                <telerik:RadMenuItem Header="TSP on All" Command="{Binding TspOnAllCommand}"/>
+                <telerik:RadMenuItem Header="Toggle Highlighted" Command="{Binding ClearHightlightCommand}"/>
+                <telerik:RadMenuItem Header="Draw Result" Command="{Binding DrawResultCommand}"/>
+                <telerik:RadMenuItem Header="Generalize Result" Command="{Binding GeneralizeCommand}"/>
+                <telerik:RadMenuItem Header="Clear Result" Command="{Binding ClearGeneralizationCommand}"/>
+                <Label Margin="5, 20, 2, 0" Content="Paths:"></Label>
+                <telerik:RadComboBox Margin="5,0,2,0" Width="100"  ItemsSource="{Binding TourPaths}"  SelectedItem="{Binding SelectedPath}"></telerik:RadComboBox>
+                <Label Margin="5, 0, 2, 0" Content="Initial population:"></Label>
+                <telerik:RadNumericUpDown Margin="5,0,0,0" Width="100" Value="{Binding InitialPopulation}" IsInteger="True" Minimum="0" Maximum="10000000000"></telerik:RadNumericUpDown>
+                <Label Margin="5, 0, 2, 0" Content="Total generations:"></Label>
+                <telerik:RadNumericUpDown Margin="5,0,0,0" Width="100" Value="{Binding TotalGenerations}" IsInteger="True" Minimum="0" Maximum="10000000000"></telerik:RadNumericUpDown>
+                <CheckBox Margin="5" IsChecked="{Binding UseOnlyDistances}" Content="Use only distances"></CheckBox>
+                <CheckBox Margin="5" IsChecked="{Binding UseVisitedEdges}" Content="Use visited edges"></CheckBox>
+
+
+
+
+            </StackPanel>
+            
+        </Grid>
+
+
+        <StatusBar Grid.Row="1" Height="22" x:Name="StatusBar" HorizontalContentAlignment="Stretch">
+            <StatusBarItem >
+                <StackPanel Orientation="Horizontal">
+                   
+                    <TextBlock Text="{Binding MainWindowStatusBarText}" />
+                  
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right" >
+                <Grid Width="16" Height="16" Margin="0,1,0,-1" Background="Transparent" VerticalAlignment="Bottom">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.ToolTip>
+                        <TextBlock Text="{Binding MyMapView.Map.Layers.Count}" MaxWidth="300" TextWrapping="Wrap" />
+                    </Grid.ToolTip>
+                </Grid>
+            </StatusBarItem>
+        </StatusBar>
+    </catel:StackGrid>
+</catel:DataWindow>
+
+
+
