@@ -14,9 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Globalization;
-using System.IO;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +24,6 @@ using ArcGISRuntime.Samples.DesktopViewer.Model;
 using Catel.IoC;
 using Catel.Logging;
 using Catel.Messaging;
-using Tsp;
 
 namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
 {
@@ -51,7 +48,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
             var capacity = this.Count*this.Count;
             var shortestPathList = new List<ShortestPath>(capacity);
             var j = 0;
-            this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage(string.Format("Calculating shortest paths for {0} vertices", this.Count), "UpdateStatusBar");
+            this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage(string.Format("Calculating shortest paths for {0} vertices (takes about 30 seconds for 271 points)", this.Count), "UpdateStatusBar");
+            var sw2 = new Stopwatch();
+            sw2.Start();
+            //270 pisteelle 60s vs 30s
             Parallel.ForEach(this, (vertexToVisit) =>
             {
                 j++;
@@ -60,6 +60,18 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
                 if (token.IsCancellationRequested)
                     token.ThrowIfCancellationRequested();
             });
+            sw2.Stop();
+            //var sw1 = new Stopwatch();
+            //shortestPathList.Clear();
+            //sw1.Start();
+            //foreach (var tempList in this.Select(vertex => GetDistances(vertex, GraphUtils.Instance.Graph.Vertices.ToList())))
+            //{
+            //    shortestPathList.AddRange(tempList);
+            //    if (token.IsCancellationRequested)
+            //        token.ThrowIfCancellationRequested();
+            //}
+            //sw1.Stop();
+          
             GraphUtils.Instance.ShortestPathList = shortestPathList;
             Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, 
                 new Action(() => 

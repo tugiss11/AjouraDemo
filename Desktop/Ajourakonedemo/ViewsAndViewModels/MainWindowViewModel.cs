@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGISRuntime.Samples.DesktopViewer.Utils;
+using ArcGISRuntime.Samples.DesktopViewer.Utils.GoogleTSP;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
 using Catel;
 using Catel.IoC;
@@ -42,7 +43,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         public Command GeneralizeCommand { get; set; }
 
         public Command ClearGeneralizationCommand { get; set; }
-
+        public Command SmoothenCommand { get; set; }
+        public Command GoogleTspCommand { get; set; }
         public Command DrawResultCommand { get; set; }
 
         public static TSPVertices TspVertexList { get; set; }
@@ -83,6 +85,13 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         }
         public static readonly PropertyData InitialPopulationProperty = RegisterProperty("InitialPopulation", typeof(int));
 
+        public int KokoajauraBufferValue
+        {
+            get { return GetValue<int>(KokoajauraBufferValueProperty); }
+            set { SetValue(KokoajauraBufferValueProperty, value); }
+        }
+        public static readonly PropertyData KokoajauraBufferValueProperty = RegisterProperty("KokoajauraBufferValue", typeof(int));
+
         public int TotalGenerations
         {
             get { return GetValue<int>(TotalGenerationsProperty); }
@@ -106,7 +115,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private static void UseOnlyDistancesPropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
         {
-            GraphUtils.Instance.UseOnlyDistances = (bool) e.NewValue;
+            GraphUtils.Instance.UseOnlyDistances = (bool)e.NewValue;
         }
 
         public bool UseVisitedEdges
@@ -121,6 +130,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             GraphUtils.Instance.UseVisitedEdges = (bool)e.NewValue;
         }
 
+        public static bool IsLoaded { get; set; }
 
         public MainWindowViewModel()
         {
@@ -130,6 +140,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             TourPaths = new List<Tuple<int, int>>();
             InitialPopulation = 10000;
             TotalGenerations = 100000;
+            KokoajauraBufferValue = 175;
         }
 
         private void InitMessages()
@@ -138,6 +149,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             MessageMediator.Register<string>(this, OnUpdateStatusBar, "UpdateStatusBar");
             MessageMediator.Register<FeatureLayerMenuItem>(this, OnAddMenuItem, "AddMenuItem");
             MessageMediator.Register<int>(this, OnScaleChanged, "ScaleChanged");
+            MessageMediator.Register<bool>(this, OnIsLoaded, "OnLoaded");
+        }
+
+        private void OnIsLoaded(bool obj)
+        {
+            IsLoaded = obj;
         }
 
         private void OnScaleChanged(int obj)
@@ -148,6 +165,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         private void InitCommands()
         {
             OpenFeaturesCommand = new Command<FeatureLayerMenuItem>(OnOpenFeaturesCommand);
+            GoogleTspCommand = new Command(OnGoogleTspCommand);
             UpdateMenuCommand = new Command(OnUpdateMenuCommand);
             TspCommand = new Command(OnTspCommand, CanTspCommand);
             TspOnAllCommand = new Command(OnTspOnAllCommand, CanGraphCommand);
@@ -162,11 +180,29 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             DrawResultCommand = new Command(OnDrawResultCommand, CanGraphCommand);
             GeneralizeCommand = new Command(OnGeneralizeCommand, CanGraphCommand);
             ClearGeneralizationCommand = new Command(OnClearGeneralizationCommand, HasTspGraphics);
+            SmoothenCommand = new Command(OnSmoothenCommand, CanGraphCommand);
         }
 
-     
+      
+
+        private void OnSmoothenCommand()
+        {
+            if (!MapUtils.Instance.GraphicsLayer.SelectedGraphics.Any())
+            {
+                this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage("Nothing to draw", "UpdateStatusBar");
+                return;
+            }
+            MapUtils.Instance.ShowSmoothened(MapUtils.Instance.GraphicsLayer.SelectedGraphics);
+            this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage("Smoothen done", "UpdateStatusBar");
+        }
+
+        private void OnGoogleTspCommand()
+        {
+            GoogleTsp.Run(new string[0]);
+        }
 
       
+
 
         private void UpdatePathsCombobox(TspEventArgs tspEventArgs)
         {
@@ -176,11 +212,20 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private static async void ScalePropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
         {
+            if (!IsLoaded)
+            {
+                return;
+            }
             await MapUtils.Instance.MapView.ZoomToScaleAsync(Convert.ToDouble(e.NewValue));
         }
 
         private bool HasTspGraphics()
         {
+            if (!IsLoaded)
+            {
+                return false;
+            }
+
             if (MapUtils.Instance.TspGraphicsLayer != null && MapUtils.Instance.TspGraphicsLayer.Graphics.Any())
             {
                 return true;
@@ -317,7 +362,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                 _cancellation.Dispose();
                 _cancellation = null;
             }
-           
+
 
 
         }
@@ -329,6 +374,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private bool CanClearHighlightCommand()
         {
+            if (!IsLoaded)
+            {
+                return false;
+            }
+            
+
             if (MapUtils.Instance.GraphicsLayer == null)
             {
                 return false;
@@ -340,6 +391,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
             return false;
         }
+
+       
 
         private void OnClearHightlightCommand()
         {
@@ -368,14 +421,19 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         private async void OnShortestPathCommand()
         {
             MessageMediator.SendMessage("Set storage location", "NaytaInfoboksiKayttajalle");
+            GraphUtils.Instance.KokoajauraList = new List<List<GraphEdgeClass>>();
             var startingVertex = await MapUtils.Instance.GetPointFromMap();
-            //MessageMediator.SendMessage("Set route ending point", "NaytaInfoboksiKayttajalle");
-            var endingVertex = MapUtils.Instance.FindFarmostVertexInsideGraph(startingVertex, GraphUtils.Instance.Graph);
-            if (startingVertex != null && endingVertex != null)
+            var pisteJoukko = GraphUtils.Instance.GraphVerticesAsMapPoint;
+            while (GraphUtils.Instance.CheckIfKokoajaUratCoverTheKuvio(ref pisteJoukko, KokoajauraBufferValue))
             {
-                GraphUtils.Instance.GetShortestPathFromVertexToVertex(startingVertex, endingVertex);
+                var endingVertex = MapUtils.Instance.FindFarmostPointInsideListOfPoint(startingVertex, pisteJoukko);
+                if (startingVertex != null && endingVertex != null)
+                {
+                    GraphUtils.Instance.AddKokoajauraFromStartPointToEndPoint(startingVertex, endingVertex);
+                }
             }
 
+            MapUtils.Instance.HighlightEdges(GraphUtils.Instance.KokoajauraList.SelectMany(o => o));
         }
 
         private void OnMinimumSpanningTreeCommand()
@@ -385,15 +443,16 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private bool CanLoadGraphCommand()
         {
-            if (MapUtils.Instance.Map.Layers.OfType<FeatureLayer>().Any())
-            {
+            //if (MapUtils.Instance.Map != null && MapUtils.Instance.Map.Layers.OfType<FeatureLayer>().Any())
+            //{
                 return true;
-            }
-            return false;
+            //}
+            //return false;
         }
 
         private async void OnLoadGraphCommand()
         {
+           
             var result = await GraphUtils.Instance.AddFeatureLayersToGraph();
             foreach (var graph in result)
             {
@@ -409,6 +468,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private async void OnLoadLayersCommand()
         {
+            var viewModelManager = (IViewModelManager)Catel.IoC.ServiceLocator.Default.ResolveType(typeof(IViewModelManager));
+            var viewModel = (KarttaViewModel)viewModelManager.ActiveViewModels.FirstOrDefault(vm => vm is KarttaViewModel);
+            if (viewModel != null) await viewModel.InitializeMapAsync();
             MapUtils.Instance.AddFeatureLayersAsGraphic();
             await GraphUtils.Instance.AddFeatureLayersToGraph();
         }

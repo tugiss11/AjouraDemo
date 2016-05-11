@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels;
 using Catel.IO;
 using Catel.IoC;
 using Catel.Logging;
 using Catel.MVVM;
+using Path = Catel.IO.Path;
 
 namespace ArcGISRuntime.Samples.DesktopViewer
 {

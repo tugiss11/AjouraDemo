@@ -14,7 +14,6 @@
 
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Tsp;
 
 namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2

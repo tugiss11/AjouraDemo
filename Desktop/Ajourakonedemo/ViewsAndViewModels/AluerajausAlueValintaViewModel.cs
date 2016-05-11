@@ -217,16 +217,16 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             ValittuAlue = Alueet.FirstOrDefault(alue => alue.Attributes[ObjectIdField].ToString() == objectid.ToString());
         }
 
-        private void OnSulje()
+        private async void OnSulje()
         {
             Ok = false;
-            CancelAndCloseViewModel();
+            await CloseViewModelAsync(true);
         }
 
-        private void OnOk()
+        private async void OnOk()
         {
             Ok = true;
-            SaveAndCloseViewModel();
+            await SaveViewModelAsync();
         }
 
         private async void OnZoomToGeometries()

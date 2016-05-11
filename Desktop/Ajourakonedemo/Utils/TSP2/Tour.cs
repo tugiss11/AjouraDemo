@@ -13,7 +13,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 using System;
 using System.Collections.Generic;
-using System.Text;
 using ArcGISRuntime.Samples.DesktopViewer.Utils;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
 

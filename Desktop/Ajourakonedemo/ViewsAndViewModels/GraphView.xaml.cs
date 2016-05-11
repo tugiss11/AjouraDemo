@@ -1,5 +1,4 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using Catel.Windows;
 
 namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels

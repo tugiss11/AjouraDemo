@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Threading;
 using ArcGISRuntime.Samples.DesktopViewer.Model;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
@@ -15,7 +13,6 @@ using Esri.ArcGISRuntime.Geometry;
 using Esri.ArcGISRuntime.Layers;
 using QuickGraph;
 using QuickGraph.Algorithms;
-using Tsp;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -35,6 +32,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         }
 
         internal List<ShortestPath> ShortestPathList { get; set; }
+        internal List<MapPoint> GraphVerticesAsMapPoint { get; set; }
+        internal List<List<GraphEdgeClass>> KokoajauraList { get; set; }
 
         private GraphClass _graph;
 
@@ -98,12 +97,25 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 }
             }
             Graph = g;
+            InitMapPointList(g);
             var returnvalue = new GraphClassBidirectional();
             returnvalue.AddVertexRange(g.Vertices);
             returnvalue.AddEdgeRange(g.Edges);
 
 
             return returnvalue;
+        }
+
+        private void InitMapPointList(GraphClass graphClass)
+        {
+            GraphVerticesAsMapPoint = new List<MapPoint>();
+            foreach (var vertex in graphClass.Vertices)
+            {
+                if (vertex.X != null && vertex.Y != null)
+                {
+                    GraphVerticesAsMapPoint.Add(new MapPoint((double)vertex.X, (double)vertex.Y, new SpatialReference(3067)));
+                }
+            }
         }
 
         private static int CheckIfPointExistsInDictionary(Dictionary<int, MapPoint> mapPointDictionary, MapPoint startPoint, ref int counter)
@@ -161,7 +173,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             return weight;
         }
 
-        public void GetShortestPathFromVertexToVertex(MapPoint startingVertex, MapPoint endingVertex)
+        public void AddKokoajauraFromStartPointToEndPoint(MapPoint startingVertex, MapPoint endingVertex)
         {
 
             if (Graph == null)
@@ -173,9 +185,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             var root = Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(startingVertex.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(startingVertex.Y));
             var target = Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(endingVertex.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(endingVertex.Y));
 
-            var edgleList = ShortestPathAlgorithm(root, target);
+            var edgeList = ShortestPathAlgorithm(root, target);
+            AddEdgeListToKokoajaUraList(edgeList);
 
-            MapUtils.Instance.HighlightEdges(edgleList);
+
+        }
+
+        private void AddEdgeListToKokoajaUraList(List<GraphEdgeClass> edgeList)
+        {
+            KokoajauraList.Add(edgeList);
         }
 
         public List<GraphEdgeClass> ShortestPathAlgorithm(GraphVertexClass root, GraphVertexClass target)
@@ -207,8 +225,6 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
             try
             {
-
-
                 var cityList = new TSPVertices();
                 if (graphVertexList == null)
                 {
@@ -232,11 +248,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 tsp.Begin(token, populationSize, maxGenerations, groupSize, mutation, seed, chanceUseCloseCity, cityList);
                 tsp.FoundNewBestTour -= tsp_foundNewBestTour;
                 tsp.newCalcStarted -= tsp_newCalcStarted;
-                ResetFields();
+
             }
             finally
             {
                 tsp = null;
+                ResetFields();
             }
 
         }
@@ -379,6 +396,40 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 edge.IsVisited = false;
             }
         }
+
+        public bool CheckIfKokoajaUratCoverTheKuvio(ref List<MapPoint> pointSet, int kokoajauraBufferValue)
+        {
+            pointSet = new List<MapPoint>(pointSet);
+            Geometry unionGeometry = null;
+            List<Geometry> allKokoajaGeometries = new List<Geometry>();
+            foreach (var kokoajaura in KokoajauraList)
+            {
+                List<Geometry> geometryList = MapUtils.Instance.GetGeometriesWithIdsFromGraphicLayer(kokoajaura.Select(o => o.Id));
+                allKokoajaGeometries.AddRange(geometryList);
+            }
+            if (allKokoajaGeometries.Any())
+            {
+                unionGeometry = GeometryEngine.Buffer(GeometryEngine.Union(allKokoajaGeometries), kokoajauraBufferValue);
+                List<MapPoint> pointsNotCovered = new List<MapPoint>();
+
+                foreach (var point in pointSet)
+                {
+                    if (!GeometryEngine.Intersects(point, GeometryEngine.Project(unionGeometry, point.SpatialReference)))
+                    {
+                        pointsNotCovered.Add(point);
+                    }
+                }
+                pointSet = pointsNotCovered;
+            }
+            if (!pointSet.Any())
+            {
+                return false;
+            }
+            return true;
+
+        }
+
+
     }
 
 

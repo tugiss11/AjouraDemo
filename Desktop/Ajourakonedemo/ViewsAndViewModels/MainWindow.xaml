@@ -64,7 +64,7 @@
                 <Label Margin="5, 0, 2, 0" Content="Scale:"></Label>
                 <telerik:RadNumericUpDown Margin="5,0,0,0" Width="100" Value="{Binding Scale}" IsInteger="True" Minimum="0" Maximum="10000000000"></telerik:RadNumericUpDown>
                 <telerik:RadMenuItem Header="Layer Count" Click="MenuItem_OnClick__ShowLayerCount"/>
-                <telerik:RadMenuItem Header="Load Graphics" Command="{Binding LoadLayersCommand}"/>
+                <telerik:RadMenuItem Header="Load Layers" Command="{Binding LoadLayersCommand}"/>
                 <telerik:RadMenuItem Header="Toggle Graphics" Command="{Binding ToggleGraphicsCommand}"/>
                 <telerik:RadMenuItem Header="Load Graph" Command="{Binding LoadGraphCommand}"/>
                 <telerik:RadMenuItem Header="Minimum Spanning Tree" Command="{Binding MinimumSpanningTreeCommand}"/>
@@ -72,9 +72,11 @@
                 <telerik:RadMenuItem Header="Add TSP vertices" Command="{Binding SetTspNodesCommand}"/>
                 <telerik:RadMenuItem Header="TSP on Selected" Command="{Binding TspCommand}"/>
                 <telerik:RadMenuItem Header="TSP on All" Command="{Binding TspOnAllCommand}"/>
+                <telerik:RadMenuItem Header="Google TSP" Command="{Binding GoogleTspCommand}"/>
                 <telerik:RadMenuItem Header="Toggle Highlighted" Command="{Binding ClearHightlightCommand}"/>
                 <telerik:RadMenuItem Header="Draw Result" Command="{Binding DrawResultCommand}"/>
                 <telerik:RadMenuItem Header="Generalize Result" Command="{Binding GeneralizeCommand}"/>
+                <telerik:RadMenuItem Header="Smoothen Result" Command="{Binding SmoothenCommand}"/>
                 <telerik:RadMenuItem Header="Clear Result" Command="{Binding ClearGeneralizationCommand}"/>
                 <Label Margin="5, 20, 2, 0" Content="Paths:"></Label>
                 <telerik:RadComboBox Margin="5,0,2,0" Width="100"  ItemsSource="{Binding TourPaths}"  SelectedItem="{Binding SelectedPath}"></telerik:RadComboBox>
@@ -84,6 +86,8 @@
                 <telerik:RadNumericUpDown Margin="5,0,0,0" Width="100" Value="{Binding TotalGenerations}" IsInteger="True" Minimum="0" Maximum="10000000000"></telerik:RadNumericUpDown>
                 <CheckBox Margin="5" IsChecked="{Binding UseOnlyDistances}" Content="Use only distances"></CheckBox>
                 <CheckBox Margin="5" IsChecked="{Binding UseVisitedEdges}" Content="Use visited edges"></CheckBox>
+                <Label Margin="5, 0, 2, 0" Content="Buffer value:"></Label>
+                <telerik:RadNumericUpDown Margin="5,0,0,0" Width="100" Value="{Binding KokoajauraBufferValue}" IsInteger="True" Minimum="0" Maximum="10000000000"></telerik:RadNumericUpDown>
 
 
 

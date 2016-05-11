@@ -15,7 +15,7 @@
     </catel:UserControl.Resources>
 
     <Grid>
-        <esri:MapView x:Name="MapView" services:MapViewService.MapView="{Binding MapViewService}"   Map="{Binding Map, Mode=TwoWay}" Cursor="{Binding MapViewService.CurrentCursor}">
+        <esri:MapView x:Name="MapView" services:MapViewService.MapView="{Binding KarttaMapViewService}"   Map="{Binding Map, Mode=TwoWay}" Cursor="{Binding MapViewService.CurrentCursor}">
             <esri:MapView.Overlays>
                 <esri:OverlayItemsControl>
                     <Border Margin="5" Tag="{Binding InfoBoxiKayttajalle, NotifyOnTargetUpdated=True}"  Padding="5" BorderThickness="1" BorderBrush="Red" Background="White" CornerRadius="10">

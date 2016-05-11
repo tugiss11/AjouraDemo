@@ -51,6 +51,18 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         }
         public static readonly PropertyData InfoTekstiProperty = RegisterProperty("InfoTeksti", typeof(string));
 
+        public MapView MyMapView
+        {
+            get
+            {
+                var service = Catel.IoC.ServiceLocator.Default.GetService(typeof(MapViewService)) as MapViewService;
+                if (service != null)
+                    return service.MapView;
+
+                return null;
+            }
+        }
+
         public Map Map
         {
             get
@@ -65,7 +77,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         public static readonly PropertyData MapProperty = RegisterProperty("Map", typeof(Map));
 
         private MapViewService _mapViewService;
-        public MapViewService MapViewService
+        public MapViewService KarttaMapViewService
         {
             get
             {
@@ -86,16 +98,18 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             Mediator.Register<string>(this, OnNaytaInfoboksiKayttajalle, "NaytaInfoboksiKayttajalle");
             Mediator.Register<string>(this, OnNaytaInfoTekstiKayttajalle, "NaytaInfotekstiKayttajalle");
             MapViewNavigationCompletedCommand = new Command<EventArgs>(OnMapViewNavigationCompletedCommand);
+
+            InitializeMap();
         }
 
 
-        protected override async void Initialize()
-        {
-            base.Initialize();
-            log.Info("Starting Initialize KarttaViewModelBase!");
-            await InitializeAsync();
-            log.Info("KarttaViewModelBase InitializeAsync done!");
-        }
+        //protected override  InitializeAsync()
+        //{
+            
+            //log.Info("Starting Initialize KarttaViewModelBase!");
+            //await InitializeMapAsync();
+            //log.Info("KarttaViewModelBase InitializeAsync done!");
+        //}
 
         #endregion
 
@@ -118,14 +132,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         #region Methods
 
 
-        public async Task InitializeAsync()
+        public async Task InitializeMapAsync()
         {
             Mediator.SendMessage("Loading layers...", "UpdateStatusBar");
-
-            InitializeMap();
-
-            string basemapUri = ConfigurationManager.AppSettings["basemapUri"];
-            await MapUtils.Instance.LoadBasemapAsync(basemapUri, "Taustakartta");
+            
+            //string basemapUri = ConfigurationManager.AppSettings["basemapUri"];
+            //await MapUtils.Instance.LoadBasemapAsync(basemapUri, "Taustakartta");
 
             string path = ConfigurationManager.AppSettings["GridPath"];
             await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path, "Grid");
@@ -135,6 +147,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
 
             Mediator.SendMessage("Loading done", "UpdateStatusBar");
+            Mediator.SendMessage(true, "OnLoaded");
 
 
         }
@@ -148,8 +161,6 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                     new ViewpointExtent(new Envelope(46167.837979319, 6629395.36843484, 762231.492641991,
                         7810900.49878568))
             };
-
-            MapViewService.MapView.Map = Map;
         }
 
         private void OnNaytaInfoboksiKayttajalle(string infoteksti)
@@ -162,9 +173,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             LuoInfoboxinAnchorpoint();
             InfoBoxiKayttajalle = infoteksti;
             RaisePropertyChanged("InfoBoxiKayttajalle");
-            if (MapViewService.MapView.Overlays.Items.Count > 0)
+            if (KarttaMapViewService.MapView.Overlays.Items.Count > 0)
             {
-                ViewBase.SetViewOverlayAnchor((FrameworkElement)MapViewService.MapView.Overlays.Items[0], MapViewService.MapView.ScreenToLocation(InfoBoxiAnchorPoint));
+                ViewBase.SetViewOverlayAnchor((FrameworkElement)KarttaMapViewService.MapView.Overlays.Items[0], KarttaMapViewService.MapView.ScreenToLocation(InfoBoxiAnchorPoint));
             }
         }
 
@@ -173,16 +184,16 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             LuoInfoboxinAnchorpoint();
             InfoTeksti = infoteksti;
             RaisePropertyChanged("InfoTeksti");
-            if (MapViewService.MapView.Overlays.Items.Count > 0)
+            if (KarttaMapViewService.MapView.Overlays.Items.Count > 0)
             {
-                ViewBase.SetViewOverlayAnchor((FrameworkElement)MapViewService.MapView.Overlays.Items[1], MapViewService.MapView.ScreenToLocation(InfoBoxiAnchorPoint));
+                ViewBase.SetViewOverlayAnchor((FrameworkElement)KarttaMapViewService.MapView.Overlays.Items[1], KarttaMapViewService.MapView.ScreenToLocation(InfoBoxiAnchorPoint));
             }
         }
 
         private void LuoInfoboxinAnchorpoint()
         {
-            var y = MapViewService.MapView.ActualHeight - 25;
-            var x = MapViewService.MapView.ActualWidth / 2 - 25;
+            var y = KarttaMapViewService.MapView.ActualHeight - 25;
+            var x = KarttaMapViewService.MapView.ActualWidth / 2 - 25;
             InfoBoxiAnchorPoint = new Point { X = x, Y = y };
         }
 
@@ -190,7 +201,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         protected void OnMapViewNavigationCompletedCommand(EventArgs e)
         {
-            var scale = (int)MapViewService.MapView.Scale;
+            var scale = (int)KarttaMapViewService.MapView.Scale;
             if (_oldscale == scale) return;
             _oldscale = scale;
             Mediator.SendMessage(scale, "ScaleChanged");

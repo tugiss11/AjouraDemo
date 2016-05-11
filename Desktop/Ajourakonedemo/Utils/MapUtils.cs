@@ -14,7 +14,7 @@ using Catel.IoC;
 using Catel.Logging;
 using Catel.Messaging;
 using Catel.MVVM;
-using Catel.MVVM.Services;
+using Catel.Services;
 using Esri.ArcGISRuntime.Controls;
 using Esri.ArcGISRuntime.Data;
 using Esri.ArcGISRuntime.Geometry;
@@ -114,7 +114,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public Map Map
         {
-            get { return MapViewService.Map; }
+            get
+            {
+                return MapViewService.MapView.Map;
+            }
         }
 
         public IEnumerable<Graphic> SavedHightlights { get; set; }
@@ -224,13 +227,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             var basemap = new ArcGISDynamicMapServiceLayer(new Uri(uri))
             {
                 DisplayName = displayname,
-
-                ID = displayname
+                ID = displayname,
+                MaxScale = 0,
+                MinScale = 0,
+                IsVisible = true
             };
 
-            basemap.MaxScale = 0;
-            basemap.MinScale = 0;
-            basemap.IsVisible = true;
             log.Info(string.Format("InitAsync {0}{1}", uri, Environment.NewLine));
             await basemap.InitializeAsync();
             log.Info(string.Format("InitAsync done {0}{1}", uri, Environment.NewLine));
@@ -369,7 +371,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     }
                     catch (Exception ex)
                     {
-                        this.GetDependencyResolver().Resolve<IMessageService>().ShowError(ex);
+                        await this.GetDependencyResolver().Resolve<IMessageService>().ShowErrorAsync(ex);
                     }
                 }
 
@@ -644,7 +646,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 //    lastCity2 = nextCity2;
                 //    nextCity2 = tspEventArgs.BestTour[nextCity2].Connection2;
                 //}
-            
+
 
             }
 
@@ -660,12 +662,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         internal List<Tuple<int, int>> GetTourOnOrder(Tour bestTour)
         {
-            var result = new List<Tuple<int,int>>();
+            var result = new List<Tuple<int, int>>();
 
             int lastCity = 0;
             int nextCity = bestTour[0].Connection1;
             result.Add(new Tuple<int, int>(lastCity, nextCity));
-            
+
             while (result.Count < bestTour.Count)
             {
                 if (lastCity != bestTour[nextCity].Connection1)
@@ -686,13 +688,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         }
 
 
-        public MapPoint FindFarmostVertexInsideGraph(MapPoint startingVertex, GraphClass graph)
+        public MapPoint FindFarmostPointInsideListOfPoint(MapPoint startingVertex, List<MapPoint> mapPointList)
         {
             var maxDistance = 0.0;
             MapPoint result = null;
-            foreach (var vertex in graph.Vertices)
+            foreach (var mappoint in mapPointList)
             {
-                var mappoint = vertex.AsMapPoint();
                 if (mappoint != null)
                 {
                     var distance = GeometryEngine.Distance(startingVertex, mappoint);
@@ -746,6 +747,44 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 var idCollection = path.ShortestPathEdges.Select(o => o.Id);
                 var geometryList = (from id in idCollection select GraphicsLayer.Graphics.FirstOrDefault(o => Convert.ToInt32(o.Attributes["FID"]) == id) into graphic where graphic != null select graphic.Geometry).ToList();
                 TspGraphicsLayer.Graphics.Add(new Graphic(GeometryEngine.Union(geometryList), symbol));
+            }
+
+
+        }
+
+        public List<Geometry> GetGeometriesWithIdsFromGraphicLayer(IEnumerable<int> ids)
+        {
+            var result = new List<Geometry>();
+            foreach (var id in ids)
+            {
+                var graphic = GraphicsLayer.Graphics.FirstOrDefault(o => Convert.ToInt32(o.Attributes["FID"]) == id);
+                if (graphic != null)
+                {
+                    result.Add(graphic.Geometry);
+                }
+            }
+            return result;
+        }
+
+        public void ShowSmoothened(IEnumerable<Graphic> graphics)
+        {
+            var symbol = new SimpleLineSymbol
+            {
+                Color = Colors.DeepPink,
+                Style = SimpleLineStyle.Solid,
+                Width = 5
+            };
+            var geometries = graphics.Where(o => o.Geometry != null).Select(g => g.Geometry);
+            var geometry = GeometryEngine.Union(geometries);
+            if (geometry.GeometryType == GeometryType.Polyline)
+            {
+                var geometryList = SmoothUtils.Instance.SmoothPolyline((Polyline)geometry);
+                foreach (var geo in geometryList)
+                {
+
+                    TspGraphicsLayer.Graphics.Add(new Graphic(geo, symbol));
+                }
+
             }
 
 

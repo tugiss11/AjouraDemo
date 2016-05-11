@@ -2,8 +2,7 @@
 using Catel.IoC;
 using Catel.Logging;
 using Catel.Messaging;
-using Catel.MVVM;
-using Catel.MVVM.Services;
+using Catel.Services;
 
 namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 {
