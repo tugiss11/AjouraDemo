@@ -35,6 +35,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         internal List<MapPoint> GraphVerticesAsMapPoint { get; set; }
         internal List<List<GraphEdgeClass>> KokoajauraList { get; set; }
 
+        public int SlopeWeightMultiplier { get; set; }
+
+        public int WetnessWeightMultiplier { get; set; }
+
         private GraphClass _graph;
 
         public GraphClass Graph
@@ -48,6 +52,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public bool UseOnlyDistances { get; set; }
         public bool UseVisitedEdges { get; set; }
+
 
         public async Task<List<GraphClassBidirectional>> AddFeatureLayersToGraph()
         {
@@ -91,8 +96,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                         endVertex = new GraphVertexClass(endId, endPoint.X, endPoint.Y);
                     }
                     var kaltevuus = Convert.ToDouble(feature.Attributes["sivukalt"]);
+                    var kosteus = Convert.ToInt32(feature.Attributes["kulkukelp"]);
 
-                    var edge = new GraphEdgeClass(Convert.ToInt32(feature.Attributes[objectIdField]), kaltevuus, startVertex, endVertex);
+                    var edge = new GraphEdgeClass(Convert.ToInt32(feature.Attributes[objectIdField]), kaltevuus, kosteus, startVertex, endVertex);
                     g.AddVerticesAndEdge(edge);
                 }
             }
@@ -101,8 +107,6 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             var returnvalue = new GraphClassBidirectional();
             returnvalue.AddVertexRange(g.Vertices);
             returnvalue.AddEdgeRange(g.Edges);
-
-
             return returnvalue;
         }
 
@@ -151,19 +155,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         private double EdgeWeights(GraphEdgeClass graphEdgeClass)
         {
             var weight = 0.0;
-            var weightMultiplier = 10;
-            if (graphEdgeClass.Sivukaltevuus != null)
-            {
-                if (!UseOnlyDistances)
-                {
-                    weight = 17 + weightMultiplier * Math.Abs((double)graphEdgeClass.Sivukaltevuus);
-                }
-                else
-                {
-                    weight = 17;
-                }
 
-            }
+
+
+            weight = 17 + (SlopeWeightMultiplier * Math.Abs((double)graphEdgeClass.Sivukaltevuus) + (WetnessWeightMultiplier * graphEdgeClass.Kosteus));
+
+
             if (UseVisitedEdges && graphEdgeClass.IsVisited)
             {
                 weight = weight * 0.25;
@@ -172,6 +169,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             graphEdgeClass.Weight = weight;
             return weight;
         }
+
+
 
         public void AddKokoajauraFromStartPointToEndPoint(MapPoint startingVertex, MapPoint endingVertex)
         {

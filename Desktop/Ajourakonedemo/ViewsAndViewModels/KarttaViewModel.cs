@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -135,13 +136,19 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         public async Task InitializeMapAsync()
         {
             Mediator.SendMessage("Loading layers...", "UpdateStatusBar");
-            
+
+            string wmsPath = ConfigurationManager.AppSettings["taustakarttaWms"];
+            await MapUtils.Instance.LoadWmsLayerAsync(wmsPath, "Taustakartta", string.Empty);
+
             //string basemapUri = ConfigurationManager.AppSettings["basemapUri"];
             //await MapUtils.Instance.LoadBasemapAsync(basemapUri, "Taustakartta");
+            string tpkPath = ConfigurationManager.AppSettings["tpkPath"];
+            await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath, Path.GetFileName(tpkPath));
 
             string path = ConfigurationManager.AppSettings["GridPath"];
-            await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path, "Grid");
+            await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path, Path.GetFileName(path));
 
+          
             //string path2 = ConfigurationManager.AppSettings["HexPath"];
             //await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path2, "Hex");
 

@@ -37,17 +37,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         {
             SavedHightlights = new List<Graphic>();
             //MessageMediator.Register<TspEventArgs>(this, SaveTspEventArgs, "UpdateRoutesOnMap");
-            if (GraphicsLayer == null)
-            {
-                GraphicsLayer = new GraphicsLayer();
-                Map.Layers.Add(GraphicsLayer);
-                GraphicsLayer.SelectionColor = Colors.Red;
-            }
-            if (TspGraphicsLayer == null)
-            {
-                TspGraphicsLayer = new GraphicsLayer();
-                Map.Layers.Add(TspGraphicsLayer);
-            }
+          
 
 
 
@@ -64,6 +54,17 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     Width = 1
                 }
         };
+
+        private readonly SimpleLineSymbol _simpleLineSymbol = new SimpleLineSymbol
+        {
+            Color = Colors.Blue,
+            Style = SimpleLineStyle.Solid,
+            Width = 1
+        };
+
+        private GraphicsLayer _graphicsLayer;
+        private GraphicsLayer _tspGraphicsLayer;
+        private GraphicsLayer _tspVerticesLayer;
 
 
         public IViewModelManager ViewModelManager
@@ -91,10 +92,51 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             get { return _instance; }
         }
 
-        public GraphicsLayer GraphicsLayer { get; set; }
+        public GraphicsLayer GraphicsLayer
+        {
+            get
+            {
+                if (_graphicsLayer == null)
+                {
+                    GraphicsLayer = new GraphicsLayer
+                    {
+                        DisplayName = "Feature Graphics",
+                        SelectionColor = Colors.Red
+                    };
+                    Map.Layers.Add(GraphicsLayer);
+                }
+                return _graphicsLayer;
+            }
+            set { _graphicsLayer = value; }
+        }
 
-        public GraphicsLayer TspGraphicsLayer { get; set; }
-        public GraphicsLayer TspVerticesLayer { get; set; }
+        public GraphicsLayer TspGraphicsLayer
+        {
+            get
+            {
+                if (_tspGraphicsLayer == null)
+                {
+                    _tspGraphicsLayer = new GraphicsLayer {DisplayName = "Result Graphics"};
+                    Map.Layers.Add(TspGraphicsLayer);
+                }
+                return _tspGraphicsLayer;
+            }
+            set { _tspGraphicsLayer = value; }
+        }
+
+        public GraphicsLayer TspVerticesLayer
+        {
+            get
+            {
+                if (_tspVerticesLayer == null)
+                {
+                    _tspVerticesLayer = new GraphicsLayer { DisplayName = "Point Graphics" };
+                    Map.Layers.Add(TspVerticesLayer);
+                }
+                return _tspVerticesLayer;
+            }
+            set { _tspVerticesLayer = value; }
+        }
 
         public TspEventArgs LatestTspEventArgs
         {
@@ -294,7 +336,14 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                         DisplayName = displayname,
                         IsVisible = isVisible,
                     };
-                    featureLayer.Renderer = new SimpleRenderer() { Symbol = _simpleFillSymbol };
+                    if (shapeFileTable.GeometryType == GeometryType.Polygon)
+                    {
+                        featureLayer.Renderer = new SimpleRenderer() {Symbol = _simpleFillSymbol};
+                    }
+                    else if (shapeFileTable.GeometryType == GeometryType.Polyline)
+                    {
+                        featureLayer.Renderer = new SimpleRenderer() {Symbol = _simpleLineSymbol};
+                    }
                     await featureLayer.InitializeAsync();
                     featureLayer.MinScale = 0;
                     featureLayer.MaxScale = 0;
@@ -323,6 +372,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             if (GraphicsLayer == null)
             {
                 GraphicsLayer = new GraphicsLayer();
+                GraphicsLayer.DisplayName = "Feature graphics";
             }
             else
             {
@@ -543,6 +593,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             if (TspGraphicsLayer == null)
             {
                 TspGraphicsLayer = new GraphicsLayer();
+
                 Map.Layers.Add(TspGraphicsLayer);
             }
             else
@@ -579,6 +630,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             if (TspVerticesLayer == null)
             {
                 TspVerticesLayer = new GraphicsLayer();
+                TspVerticesLayer.DisplayName = "Point Graphics";
                 Map.Layers.Add(TspVerticesLayer);
             }
             var symbol = new SimpleMarkerSymbol()
@@ -788,6 +840,36 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
 
 
+        }
+
+        public async Task LoadArcGisLocalTiledLayerAsync(string path, string displayname, bool isVisible = true)
+        {
+            var localtiledlayer = new ArcGISLocalTiledLayer(path)
+            {
+                DisplayName = displayname,
+                IsVisible = isVisible,
+                ID = displayname
+            };
+            await localtiledlayer.InitializeAsync();
+            Map.Layers.Add(localtiledlayer);
+        }
+
+        public async Task LoadWmsLayerAsync(string uri, string displayname, string tablename, bool isVisible = true)
+        {
+                var wmslayer = new WmsLayer(new Uri(uri))
+                {
+                    DisplayName = displayname,
+                    IsVisible = isVisible,
+                };
+                if (!string.IsNullOrEmpty(tablename))
+                {
+                    wmslayer.Layers = new[] {tablename};
+                }
+                wmslayer.MinScale = 0;
+                wmslayer.MaxScale = 0;
+                wmslayer.ImageFormat = "image/png";
+                await wmslayer.InitializeAsync();
+                Map.Layers.Add(wmslayer);
         }
     }
 }

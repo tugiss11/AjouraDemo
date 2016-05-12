@@ -78,17 +78,30 @@
                 <telerik:RadMenuItem Header="Generalize Result" Command="{Binding GeneralizeCommand}"/>
                 <telerik:RadMenuItem Header="Smoothen Result" Command="{Binding SmoothenCommand}"/>
                 <telerik:RadMenuItem Header="Clear Result" Command="{Binding ClearGeneralizationCommand}"/>
-                <Label Margin="5, 20, 2, 0" Content="Paths:"></Label>
-                <telerik:RadComboBox Margin="5,0,2,0" Width="100"  ItemsSource="{Binding TourPaths}"  SelectedItem="{Binding SelectedPath}"></telerik:RadComboBox>
-                <Label Margin="5, 0, 2, 0" Content="Initial population:"></Label>
-                <telerik:RadNumericUpDown Margin="5,0,0,0" Width="100" Value="{Binding InitialPopulation}" IsInteger="True" Minimum="0" Maximum="10000000000"></telerik:RadNumericUpDown>
-                <Label Margin="5, 0, 2, 0" Content="Total generations:"></Label>
-                <telerik:RadNumericUpDown Margin="5,0,0,0" Width="100" Value="{Binding TotalGenerations}" IsInteger="True" Minimum="0" Maximum="10000000000"></telerik:RadNumericUpDown>
-                <CheckBox Margin="5" IsChecked="{Binding UseOnlyDistances}" Content="Use only distances"></CheckBox>
+                <TextBlock Margin="5, 20, 2, 0" Text="Paths:"></TextBlock>
+                <telerik:RadComboBox Margin="5,0,2,20" Width="100"  ItemsSource="{Binding TourPaths}"  SelectedItem="{Binding SelectedPath}"></telerik:RadComboBox>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=InitialPopulation, StringFormat=Initial population: {0}}"></TextBlock>
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding InitialPopulation}" Orientation="Horizontal" Minimum="10000" Maximum="1000000"></telerik:RadSlider>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=TotalGenerations, StringFormat=Total generations: {0}:}"></TextBlock>
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding TotalGenerations}" LargeChange="10000" Minimum="100000" Maximum="10000000"></telerik:RadSlider>
+                <TextBlock Margin="5, 0, 2, 0"  Text="{Binding Path=SlopeWeightMultiplier, StringFormat=Slope Weight Multiplier: {0}}"></TextBlock>
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding SlopeWeightMultiplier}" LargeChange="5" Minimum="0" Maximum="100"></telerik:RadSlider>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=WetnessWeightMultiplier, StringFormat=Wetness Weight Multiplier: {0}}"></TextBlock> 
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding WetnessWeightMultiplier}" LargeChange="5" Minimum="0" Maximum="100"></telerik:RadSlider>
                 <CheckBox Margin="5" IsChecked="{Binding UseVisitedEdges}" Content="Use visited edges"></CheckBox>
-                <Label Margin="5, 0, 2, 0" Content="Buffer value:"></Label>
-                <telerik:RadNumericUpDown Margin="5,0,0,0" Width="100" Value="{Binding KokoajauraBufferValue}" IsInteger="True" Minimum="0" Maximum="10000000000"></telerik:RadNumericUpDown>
-
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=KokoajauraBufferValue, StringFormat=Buffer Parameter: {0}}"></TextBlock>
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding KokoajauraBufferValue}" LargeChange="25"  Minimum="0" Maximum="2500"></telerik:RadSlider>
+                <TextBlock Margin="5, 0, 2, 0" Text="Tasot:"></TextBlock>
+                <ListView Margin="3"  ItemsSource="{Binding Layers}" Background="Transparent">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox IsChecked="{Binding IsVisible, Mode=TwoWay}" Margin="2" />
+                                <TextBlock Text="{Binding DisplayName}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
 
 
 
@@ -120,6 +133,10 @@
         </StatusBar>
     </catel:StackGrid>
 </catel:DataWindow>
+
+
+
+
 
 
 

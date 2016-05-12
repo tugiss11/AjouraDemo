@@ -69,7 +69,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         }
         public static readonly PropertyData SelectedPathProperty = RegisterProperty("SelectedPath", typeof(Tuple<int, int>), null, SelectedPathPropertyChangedEventHandler);
 
-
+        public LayerCollection Layers
+        {
+            get { return GetValue<LayerCollection>(LayersProperty); }
+            set { SetValue(LayersProperty, value); }
+        }
+        public static readonly PropertyData LayersProperty = RegisterProperty("Layers", typeof(LayerCollection));
 
         public string MainWindowStatusBarText
         {
@@ -106,16 +111,28 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         }
         public static readonly PropertyData ScaleProperty = RegisterProperty("Scale", typeof(int), 100000, ScalePropertyChangedEventHandler);
 
-        public bool UseOnlyDistances
+        public int WetnessWeightMultiplier
         {
-            get { return GetValue<bool>(UseOnlyDistancesProperty); }
-            set { SetValue(UseOnlyDistancesProperty, value); }
+            get { return GetValue<int>(WetnessWeightMultiplierProperty); }
+            set { SetValue(WetnessWeightMultiplierProperty, value); }
         }
-        public static readonly PropertyData UseOnlyDistancesProperty = RegisterProperty("UseOnlyDistances", typeof(bool), false, UseOnlyDistancesPropertyChangedEventHandler);
+        public static readonly PropertyData WetnessWeightMultiplierProperty = RegisterProperty("WetnessWeightMultiplier", typeof(int), 0, WetnessWeightMultiplierPropertyChangedEventHandler);
 
-        private static void UseOnlyDistancesPropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
+        public int SlopeWeightMultiplier
         {
-            GraphUtils.Instance.UseOnlyDistances = (bool)e.NewValue;
+            get { return GetValue<int>(SlopeWeightMultiplierProperty); }
+            set { SetValue(SlopeWeightMultiplierProperty, value); }
+        }
+        public static readonly PropertyData SlopeWeightMultiplierProperty = RegisterProperty("SlopeWeightMultiplier", typeof(int), 0, SlopeWeightMultiplierPropertyChangedEventHandler);
+
+        private static void SlopeWeightMultiplierPropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
+        {
+            GraphUtils.Instance.SlopeWeightMultiplier = (int)e.NewValue;
+        }
+
+        private static void WetnessWeightMultiplierPropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
+        {
+            GraphUtils.Instance.WetnessWeightMultiplier = (int)e.NewValue;
         }
 
         public bool UseVisitedEdges
@@ -423,13 +440,21 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             MessageMediator.SendMessage("Set storage location", "NaytaInfoboksiKayttajalle");
             GraphUtils.Instance.KokoajauraList = new List<List<GraphEdgeClass>>();
             var startingVertex = await MapUtils.Instance.GetPointFromMap();
+            if (startingVertex == null)
+            {
+                return;
+            }
             var pisteJoukko = GraphUtils.Instance.GraphVerticesAsMapPoint;
             while (GraphUtils.Instance.CheckIfKokoajaUratCoverTheKuvio(ref pisteJoukko, KokoajauraBufferValue))
             {
                 var endingVertex = MapUtils.Instance.FindFarmostPointInsideListOfPoint(startingVertex, pisteJoukko);
-                if (startingVertex != null && endingVertex != null)
+                if (endingVertex != null)
                 {
                     GraphUtils.Instance.AddKokoajauraFromStartPointToEndPoint(startingVertex, endingVertex);
+                }
+                else
+                {
+                    break;
                 }
             }
 
@@ -471,8 +496,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             var viewModelManager = (IViewModelManager)Catel.IoC.ServiceLocator.Default.ResolveType(typeof(IViewModelManager));
             var viewModel = (KarttaViewModel)viewModelManager.ActiveViewModels.FirstOrDefault(vm => vm is KarttaViewModel);
             if (viewModel != null) await viewModel.InitializeMapAsync();
+
             MapUtils.Instance.AddFeatureLayersAsGraphic();
             await GraphUtils.Instance.AddFeatureLayersToGraph();
+            Layers = MapUtils.MapViewService.Map.Layers;
         }
 
         private void OnUpdateMenuCommand()

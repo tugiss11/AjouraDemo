@@ -17,16 +17,20 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
             }
         }
 
-        public double? Sivukaltevuus { get; set;} 
+        public double Sivukaltevuus { get; set;}
+        public int Kosteus { get; set; }
         public double Weight { get; set; }
         public bool IsVisited { get; set;} 
 
-        public GraphEdgeClass(int id, double sivukaltevuus, GraphVertexClass source, GraphVertexClass target)
+        public GraphEdgeClass(int id, double sivukaltevuus, int kosteus, GraphVertexClass source, GraphVertexClass target)
             : base(source, target)
         {
             Id = id;
+            Kosteus = kosteus;
             Sivukaltevuus = sivukaltevuus;
         }
+
+    
 
         public GraphEdgeClass(int id, GraphVertexClass source, GraphVertexClass target)
           : base(source, target)
