@@ -15,6 +15,9 @@ using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
 using Catel;
 using Catel.IoC;
 using Catel.Messaging;
+using Esri.ArcGISRuntime.Geometry;
+using Esri.ArcGISRuntime.Symbology;
+using Tsp;
 
 namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 {
@@ -88,7 +91,17 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<int>(InitialPopulationProperty); }
             set { SetValue(InitialPopulationProperty, value); }
         }
+
         public static readonly PropertyData InitialPopulationProperty = RegisterProperty("InitialPopulation", typeof(int));
+
+        public int VertexGroupSize
+        {
+            get { return GetValue<int>(VertexGroupSizeProperty); }
+            set { SetValue(VertexGroupSizeProperty, value); }
+        }
+
+        public static readonly PropertyData VertexGroupSizeProperty = RegisterProperty("VertexGroupSize", typeof(int), 40);
+
 
         public int KokoajauraBufferValue
         {
@@ -149,6 +162,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         public static bool IsLoaded { get; set; }
 
+        public GraphVertexClass StartingVertex { get; set; }
+
         public MainWindowViewModel()
         {
             InitCommands();
@@ -185,7 +200,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             GoogleTspCommand = new Command(OnGoogleTspCommand);
             UpdateMenuCommand = new Command(OnUpdateMenuCommand);
             TspCommand = new Command(OnTspCommand, CanTspCommand);
-            TspOnAllCommand = new Command(OnTspOnAllCommand, CanGraphCommand);
+            TspOnAllCommand = new Command(OnTspOnAllCommand, CanTspOnAllCommand);
             LoadLayersCommand = new Command(OnLoadLayersCommand, CanLoadGraphCommand);
             ShortestPathCommand = new Command(OnShortestPathCommand, CanGraphCommand);
             LoadGraphCommand = new Command(OnLoadGraphCommand, CanLoadGraphCommand);
@@ -200,7 +215,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             SmoothenCommand = new Command(OnSmoothenCommand, CanGraphCommand);
         }
 
-      
+        private bool CanTspOnAllCommand()
+        {
+            if (GraphUtils.Instance.KokoajauraList != null && GraphUtils.Instance.KokoajauraList.Any())
+            {
+                return true;
+            }
+            return false;
+        }
+
 
         private void OnSmoothenCommand()
         {
@@ -218,7 +241,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             GoogleTsp.Run(new string[0]);
         }
 
-      
+
 
 
         private void UpdatePathsCombobox(TspEventArgs tspEventArgs)
@@ -346,13 +369,44 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             }
             try
             {
+                GraphUtils.Instance.SetKokoajauratAsVisitedAndResetShortestPaths();
+
                 _cancellation = new CancellationTokenSource();
                 var token = _cancellation.Token;
                 _tspIsRunning = true;
                 if (!useList)
                 {
-                    var startingVertex = await GraphUtils.Instance.AskUserForVertex();
-                    await Task.Run(() => GraphUtils.Instance.TspAlgorithm(token, InitialPopulation, TotalGenerations, null, startingVertex), token);
+                    List<List<GraphVertexClass>> graphLists = GraphUtils.Instance.GetGraphVertexListsFromKokoajaurat(KokoajauraBufferValue, VertexGroupSize);
+                    //var taskList = new List<Task<TspEventArgs>>();
+                    var resultList = new List<TspEventArgs>();
+                    foreach (var graphlist in graphLists)
+                    {
+                        if (graphlist != null && graphlist.Any())
+                        {
+                            if (StartingVertex == null)
+                            {
+                                var task = await Task.Run(() => GraphUtils.Instance.TspAlgorithm(token, InitialPopulation, TotalGenerations, graphlist), token);
+
+                                //taskList.Add(task);
+                            }
+                            else
+                            {
+                                graphlist.Add(StartingVertex);
+                                var task = await Task.Run(() => GraphUtils.Instance.TspAlgorithm(token, InitialPopulation, TotalGenerations, graphlist, StartingVertex), token);
+                                resultList.Add(task);
+                                GraphUtils.Instance.MarkEdgesVisited(task);
+                                //taskList.Add(task);
+                            }
+                        }
+                    }
+                    //await Task.WhenAll(taskList);
+                    foreach (var evetArgs in resultList)
+                    {
+                        if (evetArgs != null)
+                        {
+                            MapUtils.Instance.DrawRoutesMethod(evetArgs, false);
+                        }
+                    }
                 }
                 else
                 {
@@ -395,7 +449,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             {
                 return false;
             }
-            
+
 
             if (MapUtils.Instance.GraphicsLayer == null)
             {
@@ -409,7 +463,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             return false;
         }
 
-       
+
 
         private void OnClearHightlightCommand()
         {
@@ -444,13 +498,14 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             {
                 return;
             }
+
             var pisteJoukko = GraphUtils.Instance.GraphVerticesAsMapPoint;
             while (GraphUtils.Instance.CheckIfKokoajaUratCoverTheKuvio(ref pisteJoukko, KokoajauraBufferValue))
             {
                 var endingVertex = MapUtils.Instance.FindFarmostPointInsideListOfPoint(startingVertex, pisteJoukko);
                 if (endingVertex != null)
                 {
-                    GraphUtils.Instance.AddKokoajauraFromStartPointToEndPoint(startingVertex, endingVertex);
+                    StartingVertex = GraphUtils.Instance.AddKokoajauraFromStartPointToEndPoint(startingVertex, endingVertex);
                 }
                 else
                 {
@@ -459,7 +514,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             }
 
             MapUtils.Instance.HighlightEdges(GraphUtils.Instance.KokoajauraList.SelectMany(o => o));
+            MapUtils.Instance.ShowSmoothened(MapUtils.Instance.GraphicsLayer.SelectedGraphics, true);
         }
+
+
+
 
         private void OnMinimumSpanningTreeCommand()
         {
@@ -470,15 +529,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         {
             //if (MapUtils.Instance.Map != null && MapUtils.Instance.Map.Layers.OfType<FeatureLayer>().Any())
             //{
-                return true;
+            return true;
             //}
             //return false;
         }
 
-        private async void OnLoadGraphCommand()
+        private void OnLoadGraphCommand()
         {
-           
-            var result = await GraphUtils.Instance.AddFeatureLayersToGraph();
+
+            var result = GraphUtils.Instance.AddFeatureLayersToGraph();
             foreach (var graph in result)
             {
                 ShowGraph(graph);
@@ -497,8 +556,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             var viewModel = (KarttaViewModel)viewModelManager.ActiveViewModels.FirstOrDefault(vm => vm is KarttaViewModel);
             if (viewModel != null) await viewModel.InitializeMapAsync();
 
-            MapUtils.Instance.AddFeatureLayersAsGraphic();
-            await GraphUtils.Instance.AddFeatureLayersToGraph();
+            await MapUtils.Instance.AddFeatureLayersAsGraphic();
+            GraphUtils.Instance.AddFeatureLayersToGraph();
             Layers = MapUtils.MapViewService.Map.Layers;
         }
 

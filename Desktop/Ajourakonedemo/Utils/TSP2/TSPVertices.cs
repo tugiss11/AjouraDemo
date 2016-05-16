@@ -71,8 +71,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
             //        token.ThrowIfCancellationRequested();
             //}
             //sw1.Stop();
+         
           
-            GraphUtils.Instance.ShortestPathList = shortestPathList;
+            GraphUtils.Instance.ShortestPathList.AddRange(shortestPathList);
             Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, 
                 new Action(() => 
                 this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage(string.Format("Total paths: {0}", GraphUtils.Instance.ShortestPathList.Count), "NaytaInfoboksiKayttajalle")));

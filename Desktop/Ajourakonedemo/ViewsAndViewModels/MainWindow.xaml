@@ -80,6 +80,8 @@
                 <telerik:RadMenuItem Header="Clear Result" Command="{Binding ClearGeneralizationCommand}"/>
                 <TextBlock Margin="5, 20, 2, 0" Text="Paths:"></TextBlock>
                 <telerik:RadComboBox Margin="5,0,2,20" Width="100"  ItemsSource="{Binding TourPaths}"  SelectedItem="{Binding SelectedPath}"></telerik:RadComboBox>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=VertexGroupSize, StringFormat=Vertex Group Size: {0}}"></TextBlock>
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding VertexGroupSize}" Orientation="Horizontal" Minimum="10" Maximum="100"></telerik:RadSlider>
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=InitialPopulation, StringFormat=Initial population: {0}}"></TextBlock>
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding InitialPopulation}" Orientation="Horizontal" Minimum="10000" Maximum="1000000"></telerik:RadSlider>
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=TotalGenerations, StringFormat=Total generations: {0}:}"></TextBlock>
@@ -91,7 +93,7 @@
                 <CheckBox Margin="5" IsChecked="{Binding UseVisitedEdges}" Content="Use visited edges"></CheckBox>
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=KokoajauraBufferValue, StringFormat=Buffer Parameter: {0}}"></TextBlock>
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding KokoajauraBufferValue}" LargeChange="25"  Minimum="0" Maximum="2500"></telerik:RadSlider>
-                <TextBlock Margin="5, 0, 2, 0" Text="Tasot:"></TextBlock>
+                <TextBlock Margin="5, 0, 2, 0" Text="Layers:"></TextBlock>
                 <ListView Margin="3"  ItemsSource="{Binding Layers}" Background="Transparent">
                     <ListView.ItemTemplate>
                         <DataTemplate>

@@ -95,7 +95,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
         /// <param name="chanceToUseCloseCity">The odds (out of 100) that a city that is known to be close will be used in any given link.</param>
         /// <param name="tspVertexListparameter"></param>
         /// <param name="cityList">List of TSPVertices in the tour.</param>
-        public void Begin(CancellationToken token, int populationSize, int maxGenerations, int groupSize, int mutation, int seed, int chanceToUseCloseCity, TSPVertices tspVertexListparameter)
+        public TspEventArgs Begin(CancellationToken token, int populationSize, int maxGenerations, int groupSize, int mutation, int seed, int chanceToUseCloseCity, TSPVertices tspVertexListparameter)
         {
             rand = new Random(seed);
 
@@ -135,12 +135,16 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
 
                 if (foundNewBestTour)
                 {
-                    DisplayTour(population.BestTour, generation, false);
+                    this.Result = DisplayTour(population.BestTour, generation, false);
                 }
             }
-
+           
             DisplayTour(population.BestTour, generation, true);
+            return Result;
         }
+
+        public TspEventArgs Result { get; set; }
+
 
         /// <summary>
         /// Randomly select a group of tours from the population. 
@@ -225,12 +229,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
         /// <param name="bestTour">The best tour the algorithm has found so far.</param>
         /// <param name="generationNumber">How many generations have been performed.</param>
         /// <param name="complete">Is the TSP algorithm complete.</param>
-        void DisplayTour(Tour bestTour, int generationNumber, bool complete)
+        TspEventArgs DisplayTour(Tour bestTour, int generationNumber, bool complete)
         {
             if (FoundNewBestTour != null)
             {
+                var thisEvent =    new TspEventArgs(tspVertexList, bestTour, generationNumber, complete);
                 this.FoundNewBestTour(this, new TspEventArgs(tspVertexList, bestTour, generationNumber, complete));
+                return thisEvent;
             }
+            return null;
         }
     }
 }

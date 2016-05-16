@@ -86,9 +86,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             RaisePropertyChanged("GraphDebug2");
         }
 
-        public async Task CreateGraphAsync()
+        public void CreateGraphAsync()
         {
-            var graph = await GraphUtils.Instance.AddFeatureLayersToGraph();
+            var graph = GraphUtils.Instance.AddFeatureLayersToGraph();
             GraphDebug2 = graph.FirstOrDefault();
         }
     }

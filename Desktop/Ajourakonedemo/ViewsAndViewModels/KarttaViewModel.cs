@@ -142,13 +142,28 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
             //string basemapUri = ConfigurationManager.AppSettings["basemapUri"];
             //await MapUtils.Instance.LoadBasemapAsync(basemapUri, "Taustakartta");
-            string tpkPath = ConfigurationManager.AppSettings["tpkPath"];
+           
+
+            string tpkPath2 = ConfigurationManager.AppSettings["wetness"];
+            await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath2, Path.GetFileName(tpkPath2));
+
+            string tpkPath = ConfigurationManager.AppSettings["countours"];
             await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath, Path.GetFileName(tpkPath));
+
+
+            string tpkPath3 = ConfigurationManager.AppSettings["linedata"];
+            await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath3, Path.GetFileName(tpkPath3));
+
+            string tpkPath4 = ConfigurationManager.AppSettings["borders"];
+            await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath4, Path.GetFileName(tpkPath4));
+
 
             string path = ConfigurationManager.AppSettings["GridPath"];
             await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path, Path.GetFileName(path));
 
-          
+
+            string kuviorajatPath = ConfigurationManager.AppSettings["kuviot"];
+            await MapUtils.Instance.LoadKuvioRajatFeatureTableAsync(kuviorajatPath);
             //string path2 = ConfigurationManager.AppSettings["HexPath"];
             //await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path2, "Hex");
 

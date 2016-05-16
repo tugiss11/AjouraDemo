@@ -37,7 +37,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         {
             SavedHightlights = new List<Graphic>();
             //MessageMediator.Register<TspEventArgs>(this, SaveTspEventArgs, "UpdateRoutesOnMap");
-          
+
 
 
 
@@ -92,6 +92,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             get { return _instance; }
         }
 
+        public IEnumerable<Feature> KuvioRajatTable { get; set; }
+
         public GraphicsLayer GraphicsLayer
         {
             get
@@ -116,7 +118,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 if (_tspGraphicsLayer == null)
                 {
-                    _tspGraphicsLayer = new GraphicsLayer {DisplayName = "Result Graphics"};
+                    _tspGraphicsLayer = new GraphicsLayer { DisplayName = "Result Graphics" };
                     Map.Layers.Add(TspGraphicsLayer);
                 }
                 return _tspGraphicsLayer;
@@ -338,11 +340,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     };
                     if (shapeFileTable.GeometryType == GeometryType.Polygon)
                     {
-                        featureLayer.Renderer = new SimpleRenderer() {Symbol = _simpleFillSymbol};
+                        featureLayer.Renderer = new SimpleRenderer() { Symbol = _simpleFillSymbol };
                     }
                     else if (shapeFileTable.GeometryType == GeometryType.Polyline)
                     {
-                        featureLayer.Renderer = new SimpleRenderer() {Symbol = _simpleLineSymbol};
+                        featureLayer.Renderer = new SimpleRenderer() { Symbol = _simpleLineSymbol };
                     }
                     await featureLayer.InitializeAsync();
                     featureLayer.MinScale = 0;
@@ -366,7 +368,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         #endregion
 
-        public async void AddFeatureLayersAsGraphic()
+        public async Task AddFeatureLayersAsGraphic()
         {
             _mes.SendMessage("Adding graphics...", "UpdateStatusBar");
             if (GraphicsLayer == null)
@@ -397,7 +399,13 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 var features = await featurelayer.FeatureTable.QueryAsync(new QueryFilter { WhereClause = "1 = 1" });
                 foreach (var feature in features)
                 {
+
                     var geometry = feature.Geometry;
+                    if (!CheckIfPointsAreInsideKuvio(geometry))
+                    {
+                        continue;
+                    }
+
                     feature.Attributes["sivukalt"] = Math.Abs(Convert.ToDouble(feature.Attributes["sivukalt"]));
                     try
                     {
@@ -430,6 +438,19 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
         }
 
+        private bool CheckIfPointsAreInsideKuvio(Geometry geo)
+        {
+            var kuviot = KuvioRajatTable;
+            foreach (var kuvio in kuviot)
+            {
+                if (GeometryEngine.Contains(kuvio.Geometry, geo))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private Renderer CreateClassBreakRenderer()
         {
             ClassBreaksRenderer renderer = new ClassBreaksRenderer();
@@ -457,7 +478,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 Color = color,
                 Style = SimpleLineStyle.Solid,
-                Width = 1
+                Width = 2
             };
             return classBreakInfo1;
         }
@@ -530,22 +551,27 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         }
 
-        public void HighlightEdges(IEnumerable<GraphEdgeClass> mst)
+        public void HighlightEdges(IEnumerable<GraphEdgeClass> mst, bool resetSelection = true)
         {
             var idCollection = mst.Select(o => o.Id);
 
-            HightlightIds(idCollection);
+            HightlightIds(idCollection, resetSelection);
         }
 
-        private void HightlightIds(IEnumerable<int> ids)
+        private void HightlightIds(IEnumerable<int> ids, bool resetSelection = true)
         {
-
             //MapViewService.MapView.SetView(new Envelope(366555.233146185, 6709824.6234944, 367256.720295555, 6710293.90540683));
             var grlayer = GraphicsLayer;
             if (grlayer != null)
             {
-                grlayer.ClearSelection();
-
+                if (resetSelection)
+                {
+                    grlayer.ClearSelection();
+                }
+                else
+                {
+                    log.Info("Not resetting selection!");
+                }
 
                 foreach (var id in ids)
                 {
@@ -553,6 +579,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     if (graphic != null)
                     {
                         graphic.IsSelected = true;
+                    }
+                    else
+                    {
+                        log.Info("Nothing to select!");
                     }
                 }
             }
@@ -657,11 +687,22 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public void DrawRoutes(TspEventArgs tspEventArgs)
         {
-            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => DrawRoutesMethod(tspEventArgs)));
+            Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => DrawRoutesMethod(tspEventArgs)));
         }
 
-        private void DrawRoutesMethod(TspEventArgs tspEventArgs)
+        public void DrawRoutesMethod(TspEventArgs tspEventArgs, bool resetSelection = true)
         {
+            var polylineList = GetGraphEdgeClassesFromEvents(tspEventArgs);
+            HighlightEdges(polylineList, resetSelection);
+        }
+
+        internal List<GraphEdgeClass> GetGraphEdgeClassesFromEvents(TspEventArgs tspEventArgs)
+        {
+            if (tspEventArgs == null)
+            {
+                return new List<GraphEdgeClass>();
+            }
+
             var polylineList = new List<GraphEdgeClass>();
             //var polylineList2 = new List<GraphEdgeClass>();
             var allVertices = tspEventArgs.TSPVertexList.ToList();
@@ -675,10 +716,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 var lastCity = orderedTour[i].Item1;
                 var nextCity = orderedTour[i].Item2;
-                ShortestPath path = GraphUtils.Instance.ShortestPathList.FirstOrDefault(o => (o.VertexId1 == allVertices[lastCity].Id && o.VertexId2 == allVertices[nextCity].Id) || (o.VertexId1 == allVertices[nextCity].Id && o.VertexId2 == allVertices[lastCity].Id));
+                //ShortestPath path = GraphUtils.Instance.ShortestPathList.FirstOrDefault(o => (o.VertexId1 == allVertices[lastCity].Id && o.VertexId2 == allVertices[nextCity].Id) || (o.VertexId1 == allVertices[nextCity].Id && o.VertexId2 == allVertices[lastCity].Id));
+                var path = GraphUtils.Instance.ShortestPathAlgorithm(GraphUtils.Instance.Graph.Vertices.FirstOrDefault(o => o.ID == allVertices[lastCity].Id), GraphUtils.Instance.Graph.Vertices.FirstOrDefault(o => o.ID == allVertices[nextCity].Id));
                 if (path != null)
                 {
-                    polylineList.AddRange(path.ShortestPathEdges);
+                    polylineList.AddRange(path);
+                }
+                else
+                {
+                    log.Error("Path not found LastCity ID {0} NextCity ID {1}", lastCity, nextCity);
                 }
                 i++;
                 ////Define next and last city
@@ -698,8 +744,6 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 //    lastCity2 = nextCity2;
                 //    nextCity2 = tspEventArgs.BestTour[nextCity2].Connection2;
                 //}
-
-
             }
 
 
@@ -709,7 +753,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             //    var city2 = tspEventArgs.TSPVertexList[connection.Connection2];
 
             //}
-            HighlightEdges(polylineList);
+            return polylineList;
         }
 
         internal List<Tuple<int, int>> GetTourOnOrder(Tour bestTour)
@@ -818,7 +862,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             return result;
         }
 
-        public void ShowSmoothened(IEnumerable<Graphic> graphics)
+        public void ShowSmoothened(IEnumerable<Graphic> graphics, bool resetGraphics = false)
         {
             var symbol = new SimpleLineSymbol
             {
@@ -826,6 +870,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 Style = SimpleLineStyle.Solid,
                 Width = 5
             };
+            if (resetGraphics)
+            {
+                TspGraphicsLayer.Graphics.Clear();
+            }
+            if (!graphics.Any())
+            {
+                return;
+            }
+
             var geometries = graphics.Where(o => o.Geometry != null).Select(g => g.Geometry);
             var geometry = GeometryEngine.Union(geometries);
             if (geometry.GeometryType == GeometryType.Polyline)
@@ -856,20 +909,31 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public async Task LoadWmsLayerAsync(string uri, string displayname, string tablename, bool isVisible = true)
         {
-                var wmslayer = new WmsLayer(new Uri(uri))
-                {
-                    DisplayName = displayname,
-                    IsVisible = isVisible,
-                };
-                if (!string.IsNullOrEmpty(tablename))
-                {
-                    wmslayer.Layers = new[] {tablename};
-                }
-                wmslayer.MinScale = 0;
-                wmslayer.MaxScale = 0;
-                wmslayer.ImageFormat = "image/png";
-                await wmslayer.InitializeAsync();
-                Map.Layers.Add(wmslayer);
+            var wmslayer = new WmsLayer(new Uri(uri))
+            {
+                DisplayName = displayname,
+                IsVisible = isVisible,
+            };
+            if (!string.IsNullOrEmpty(tablename))
+            {
+                wmslayer.Layers = new[] { tablename };
+            }
+            wmslayer.MinScale = 0;
+            wmslayer.MaxScale = 0;
+            wmslayer.ImageFormat = "image/png";
+            await wmslayer.InitializeAsync();
+            Map.Layers.Add(wmslayer);
         }
+
+        public async Task LoadKuvioRajatFeatureTableAsync(string kuviorajatPath)
+        {
+            if (File.Exists(kuviorajatPath))
+            {
+                var table = await ShapefileTable.OpenAsync(kuviorajatPath);
+                KuvioRajatTable = await table.QueryAsync(new QueryFilter() { WhereClause = "1=1" });
+            }
+        }
+
+
     }
 }
