@@ -80,6 +80,8 @@
                 <telerik:RadMenuItem Header="Clear Result" Command="{Binding ClearGeneralizationCommand}"/>
                 <TextBlock Margin="5, 20, 2, 0" Text="Paths:"></TextBlock>
                 <telerik:RadComboBox Margin="5,0,2,20" Width="100"  ItemsSource="{Binding TourPaths}"  SelectedItem="{Binding SelectedPath}"></telerik:RadComboBox>
+                <telerik:RadComboBox Margin="5,0,2,20" Width="100"  ItemsSource="{Binding EventList}"  SelectedItem="{Binding SelectedEvent}"></telerik:RadComboBox>
+             
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=VertexGroupSize, StringFormat=Vertex Group Size: {0}}"></TextBlock>
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding VertexGroupSize}" Orientation="Horizontal" Minimum="10" Maximum="100"></telerik:RadSlider>
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=InitialPopulation, StringFormat=Initial population: {0}}"></TextBlock>
@@ -104,6 +106,8 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=TotalLength, StringFormat=Total Length: {0}}"></TextBlock>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=OldTotalLength, StringFormat=Previous value: {0}}"></TextBlock>
 
 
 

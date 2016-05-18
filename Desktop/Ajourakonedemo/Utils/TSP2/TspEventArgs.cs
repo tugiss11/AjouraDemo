@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Globalization;
 using Tsp;
 
 namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
@@ -27,6 +28,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
         /// </summary>
         public TspEventArgs()
         {
+        }
+
+        public override string ToString()
+        {
+            return BestTour.Fitness.ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>

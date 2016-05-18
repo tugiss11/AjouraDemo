@@ -14,10 +14,9 @@ using ArcGISRuntime.Samples.DesktopViewer.Utils.GoogleTSP;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
 using Catel;
 using Catel.IoC;
+using Catel.Logging;
 using Catel.Messaging;
 using Esri.ArcGISRuntime.Geometry;
-using Esri.ArcGISRuntime.Symbology;
-using Tsp;
 
 namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 {
@@ -64,6 +63,26 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             set { SetValue(TourPathsProperty, value); }
         }
         public static readonly PropertyData TourPathsProperty = RegisterProperty("TourPaths", typeof(List<Tuple<int, int>>));
+
+        public TspEventArgs SelectedEvent
+        {
+            get { return GetValue<TspEventArgs>(SelectedEventProperty); }
+            set
+            {
+
+                SetValue(SelectedEventProperty, value);
+                SelectedEventPropertyChangedEventHandler(value);
+            }
+        }
+        public static readonly PropertyData SelectedEventProperty = RegisterProperty("SelectedEvent", typeof(TspEventArgs), null);
+
+
+        public List<TspEventArgs> EventList
+        {
+            get { return GetValue<List<TspEventArgs>>(EventListProperty); }
+            set { SetValue(EventListProperty, value); }
+        }
+        public static readonly PropertyData EventListProperty = RegisterProperty("EventList", typeof(List<TspEventArgs>));
 
         public Tuple<int, int> SelectedPath
         {
@@ -116,6 +135,21 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             set { SetValue(TotalGenerationsProperty, value); }
         }
         public static readonly PropertyData TotalGenerationsProperty = RegisterProperty("TotalGenerations", typeof(int));
+
+        public double TotalLength
+        {
+            get { return GetValue<double>(TotalLengthProperty); }
+            set { SetValue(TotalLengthProperty, value); }
+        }
+        public static readonly PropertyData TotalLengthProperty = RegisterProperty("TotalLength", typeof(double));
+
+        public double OldTotalLength
+        {
+            get { return GetValue<double>(OldTotalLengthProperty); }
+            set { SetValue(OldTotalLengthProperty, value); }
+        }
+        public static readonly PropertyData OldTotalLengthProperty = RegisterProperty("OldTotalLength", typeof(double));
+
 
         public int Scale
         {
@@ -171,7 +205,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
             TourPaths = new List<Tuple<int, int>>();
             InitialPopulation = 10000;
-            TotalGenerations = 100000;
+            TotalGenerations = 210000;
             KokoajauraBufferValue = 175;
         }
 
@@ -241,7 +275,21 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             GoogleTsp.Run(new string[0]);
         }
 
+        private void SelectedEventPropertyChangedEventHandler(TspEventArgs e)
+        {
+            if (e != null)
+            {
+                ShowSmoothenResultsFromTspEventArgs(e);
+            }
+        }
 
+        private void ShowSmoothenResultsFromTspEventArgs(TspEventArgs e)
+        {
+            var graphEdges = MapUtils.Instance.GetGraphEdgeClassesFromEvents(e);
+            var graphics = MapUtils.Instance.GetGraphicsFromGraphEdges(graphEdges);
+            MapUtils.Instance.ShowSmoothened(graphics);
+            UpdatePathsCombobox(e);
+        }
 
 
         private void UpdatePathsCombobox(TspEventArgs tspEventArgs)
@@ -386,7 +434,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                             if (StartingVertex == null)
                             {
                                 var task = await Task.Run(() => GraphUtils.Instance.TspAlgorithm(token, InitialPopulation, TotalGenerations, graphlist), token);
-
+                                resultList.Add(task);
+                                GraphUtils.Instance.MarkEdgesVisited(task);
                                 //taskList.Add(task);
                             }
                             else
@@ -399,14 +448,17 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                             }
                         }
                     }
+
                     //await Task.WhenAll(taskList);
                     foreach (var evetArgs in resultList)
                     {
                         if (evetArgs != null)
                         {
-                            MapUtils.Instance.DrawRoutesMethod(evetArgs, false);
+                            ShowSmoothenResultsFromTspEventArgs(evetArgs);
                         }
                     }
+                    EventList = resultList;
+                    CalculateTotalLength(resultList);
                 }
                 else
                 {
@@ -433,10 +485,32 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                 _cancellation.Dispose();
                 _cancellation = null;
             }
-
-
-
         }
+
+        private void CalculateTotalLength(List<TspEventArgs> resultList)
+        {
+            try
+            {
+                var graphicsList = new List<Graphic>();
+                foreach (var e in resultList)
+                {
+                    var graphEdges = MapUtils.Instance.GetGraphEdgeClassesFromEvents(e);
+                    var graphics = MapUtils.Instance.GetGraphicsFromGraphEdges(graphEdges);
+                    graphicsList.AddRange(graphics);
+                }
+                var geometries = graphicsList.Select(o => o.Geometry);
+                var unionGeometry = GeometryEngine.Union(geometries);
+                OldTotalLength = TotalLength;
+                TotalLength = Math.Abs(GeometryEngine.Length(unionGeometry));
+
+            }
+            catch (Exception ex)
+            {
+
+                log.Error(ex);
+            }
+        }
+
 
         private void OnUpdateStatusBar(string message)
         {
@@ -498,6 +572,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             {
                 return;
             }
+            GraphUtils.Instance.SetKokoajauratAsVisitedAndResetShortestPaths();
 
             var pisteJoukko = GraphUtils.Instance.GraphVerticesAsMapPoint;
             while (GraphUtils.Instance.CheckIfKokoajaUratCoverTheKuvio(ref pisteJoukko, KokoajauraBufferValue))

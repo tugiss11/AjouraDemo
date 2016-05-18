@@ -449,7 +449,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             var result = new List<List<GraphVertexClass>>();
             foreach (var kokoaja in KokoajauraList)
             {
-                var kokoajauraLineGeometry = GeometryEngine.Union(MapUtils.Instance.GetGeometriesWithIdsFromGraphicLayer(kokoaja.Select(o => o.Id)));
+                var kokoajauraLineGeometry = GeometryEngine.Union(MapUtils.Instance.GetGeometriesWithIdsFromGraphicLayer(kokoaja.Select(o => o.Id))) as Polyline;
                 var kokoajaGeometry = GeometryEngine.Buffer(kokoajauraLineGeometry, kokoajauraBufferValue);
                 List<MapPoint> kokoajauraPoints = new List<MapPoint>();
                 var tempPointList = new List<MapPoint>();
@@ -465,47 +465,78 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     }
                 }
                 bool isHorizontal = (kokoajaGeometry.Extent.XMax - kokoajaGeometry.Extent.XMin) > (kokoajaGeometry.Extent.YMax - kokoajaGeometry.Extent.YMin);
+                var startPoint = kokoajauraLineGeometry.Parts.FirstOrDefault().StartPoint;
+                var endPoint = kokoajauraLineGeometry.Parts.FirstOrDefault().EndPoint;
 
-                while (kokoajauraPoints.Any())
+                var leftPoints = new List<MapPoint>();
+                var rightPoints = new List<MapPoint>();
+                foreach (var point in kokoajauraPoints)
                 {
-                    var points = new List<MapPoint>();
-                    var points2 = new List<MapPoint>();
-                    if (kokoajauraPoints.Count > groupsize * 2.5)
+
+                    if (isLeft(startPoint, endPoint, point))
                     {
-                        var sorted = new List<MapPoint>();
-                        List<MapPoint> sortedSubgroups;
-                        if (isHorizontal)
-                        {
-                            sorted.AddRange(kokoajauraPoints.OrderByDescending(o => o.X));
-                            sortedSubgroups = sorted.GetRange(0, groupsize * 2).OrderByDescending(o => o.Y).ToList();
-                        }
-                        else
-                        {
-                            sorted.AddRange(kokoajauraPoints.OrderByDescending(o => o.Y));
-                            sortedSubgroups = sorted.GetRange(0, groupsize * 2).OrderByDescending(o => o.X).ToList();
-                        }
-                        points.AddRange(sortedSubgroups.GetRange(0, groupsize));
-                        points2.AddRange(sortedSubgroups.GetRange(groupsize, sortedSubgroups.Count - groupsize));
-                        kokoajauraPoints = sorted.GetRange(groupsize * 2 - 1, sorted.Count - groupsize * 2);
+                        leftPoints.Add(point);
                     }
                     else
                     {
-                        points.AddRange(kokoajauraPoints);
-                        kokoajauraPoints = new List<MapPoint>();
+                        rightPoints.Add(point);
                     }
-                    SetStartPointOnKokoajaUra(kokoajauraLineGeometry, points);
-                    AddPointsToResult(points, result);
-                    if (points2.Any())
-                    {
-                        SetStartPointOnKokoajaUra(kokoajauraLineGeometry, points2);
-                        AddPointsToResult(points2, result);
-                    }
+
                 }
+                AddPointsToResult(groupsize, leftPoints, isHorizontal, kokoajauraLineGeometry, result);
+                AddPointsToResult(groupsize, rightPoints, isHorizontal, kokoajauraLineGeometry, result);
                 pointNotCovered = tempPointList;
 
 
             }
             return result;
+        }
+
+        private void AddPointsToResult(int groupsize, List<MapPoint> kokoajauraPoints, bool isHorizontal, Polyline kokoajauraLineGeometry, List<List<GraphVertexClass>> result)
+        {
+            while (kokoajauraPoints.Any())
+            {
+                var points = new List<MapPoint>();
+                var points2 = new List<MapPoint>();
+                if (kokoajauraPoints.Count > groupsize*1.5)
+                {
+                    var sorted = new List<MapPoint>();
+                    List<MapPoint> sortedSubgroups;
+                    if (isHorizontal)
+                    {
+                        sorted.AddRange(kokoajauraPoints.OrderByDescending(o => o.X));
+                        //sortedSubgroups = sorted.GetRange(0, groupsize*2).OrderByDescending(o => o.Y).ToList();
+                    }
+                    else
+                    {
+                        sorted.AddRange(kokoajauraPoints.OrderByDescending(o => o.Y));
+                        //sortedSubgroups = sorted.GetRange(0, groupsize*2).OrderByDescending(o => o.X).ToList();
+                    }
+                    //points.AddRange(sortedSubgroups.GetRange(0, groupsize));
+                    //points2.AddRange(sortedSubgroups.GetRange(groupsize, sortedSubgroups.Count - groupsize));
+                    //kokoajauraPoints = sorted.GetRange(groupsize*2 - 1, sorted.Count - groupsize*2);
+
+                    points.AddRange(sorted.GetRange(0, groupsize));
+                    kokoajauraPoints = sorted.GetRange(groupsize - 1, sorted.Count - groupsize);
+                }
+                else
+                {
+                    points.AddRange(kokoajauraPoints);
+                    kokoajauraPoints = new List<MapPoint>();
+                }
+                SetStartPointOnKokoajaUra(kokoajauraLineGeometry, points);
+                AddPointsToResult(points, result);
+                if (points2.Any())
+                {
+                    SetStartPointOnKokoajaUra(kokoajauraLineGeometry, points2);
+                    AddPointsToResult(points2, result);
+                }
+            }
+        }
+
+        public bool isLeft(MapPoint a, MapPoint b, MapPoint c)
+        {
+            return ((b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X)) > 0;
         }
 
         private void SetStartPointOnKokoajaUra(Geometry kokoajauraLineGeometry, List<MapPoint> points)

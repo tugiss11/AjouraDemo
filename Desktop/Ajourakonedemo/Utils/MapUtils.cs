@@ -935,5 +935,19 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         }
 
 
+        public List<Graphic> GetGraphicsFromGraphEdges(List<GraphEdgeClass> graphEdges)
+        {
+            var ids = graphEdges.Select(o => o.Id);
+            var result = new List<Graphic>();
+            foreach (var id in ids)
+            {
+                var graphic = GraphicsLayer.Graphics.FirstOrDefault(o => Convert.ToInt32(o.Attributes["FID"]) == id);
+                if (graphic != null)
+                {
+                    result.Add(graphic);
+                }
+            }
+            return result;
+        }
     }
 }
