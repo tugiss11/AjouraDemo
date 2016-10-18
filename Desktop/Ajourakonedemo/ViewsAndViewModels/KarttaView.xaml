@@ -1,0 +1,64 @@
+﻿<catel:UserControl x:Class="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.KarttaView"
+             xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013" 
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:catel="http://catel.codeplex.com"
+                   xmlns:services="clr-namespace:ArcGISRuntime.Samples.DesktopViewer.Services"
+                   xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+                   mc:Ignorable="d" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"
+             VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+         >
+    <catel:UserControl.Resources>
+
+    </catel:UserControl.Resources>
+
+    <Grid>
+        <esri:MapView x:Name="MapView" services:MapViewService.MapView="{Binding KarttaMapViewService}"   Map="{Binding Map, Mode=TwoWay}" Cursor="{Binding MapViewService.CurrentCursor}">
+            <esri:MapView.Overlays>
+                <esri:OverlayItemsControl>
+                    <Border Margin="5" Tag="{Binding InfoBoxiKayttajalle, NotifyOnTargetUpdated=True}"  Padding="5" BorderThickness="1" BorderBrush="Red" Background="White" CornerRadius="10">
+                        <Border.Triggers>
+                            <EventTrigger RoutedEvent="Binding.TargetUpdated">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                                            <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                                            <EasingDoubleKeyFrame KeyTime="0:0:0.25" Value="1"/>
+                                            <EasingDoubleKeyFrame KeyTime="0:0:3" Value="1"/>
+                                            <EasingDoubleKeyFrame KeyTime="0:0:4" Value="0"/>
+                                        </DoubleAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Border.Triggers>
+                        <TextBlock Name="StatusText" Text="{Binding Path=InfoBoxiKayttajalle, NotifyOnTargetUpdated=True}">
+                        </TextBlock>
+                    </Border>
+
+               
+                      
+                        <TextBlock Name="Infoteksti" Text="{Binding Path=InfoTeksti, NotifyOnTargetUpdated=True}">
+                        </TextBlock>
+               
+
+
+
+                </esri:OverlayItemsControl>
+
+            </esri:MapView.Overlays>
+            <i:Interaction.Triggers>
+                <!--Ei MouseMovea maastolaittellaa <i:EventTrigger EventName="MouseMove">
+                    <catel:EventToCommand x:Name="CmdMapViewMouseMoveCommand" Command="{Binding MapViewMouseMoveCommand}" DisableAssociatedObjectOnCannotExecute="False" PassEventArgsToCommand="True" />
+                </i:EventTrigger> -->
+                <i:EventTrigger EventName="NavigationCompleted">
+                    <catel:EventToCommand x:Name="CmdMapViewNavigationCompletedCommand" Command="{Binding MapViewNavigationCompletedCommand}" DisableAssociatedObjectOnCannotExecute="False" PassEventArgsToCommand="True" />
+                </i:EventTrigger>
+                </i:Interaction.Triggers>
+
+        </esri:MapView>
+        <TextBlock Name="KoordinaatitBox" Width="65" Height="Auto" HorizontalAlignment="Right" VerticalAlignment="Bottom" TextAlignment="Left" Text="{Binding Koordinaatit}" Background="White" Margin="0,0,0,0" FontSize="8"></TextBlock>
+    </Grid>
+
+</catel:UserControl>

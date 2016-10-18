@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AjouraDemo", "Desktop\ArcGISRuntimeSamplesDesktopViewer\AjouraDemo.csproj", "{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{656DCD6D-CBC6-4C54-847F-5191B925C139}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|ARM = Debug|ARM
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|ARM = Release|ARM
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Debug|x64.Build.0 = Debug|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Debug|x86.Build.0 = Debug|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Release|ARM.ActiveCfg = Release|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Release|x64.ActiveCfg = Release|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Release|x64.Build.0 = Release|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Release|x86.ActiveCfg = Release|Any CPU
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB} = {656DCD6D-CBC6-4C54-847F-5191B925C139}
+	EndGlobalSection
+EndGlobal

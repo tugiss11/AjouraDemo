@@ -1,0 +1,468 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9A0DD25A-1AD3-4D8C-99EA-CA71AB4F97DB}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ArcGISRuntime.Samples.DesktopViewer</RootNamespace>
+    <AssemblyName>ArcGISRuntimeSamplesDesktopViewer</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\output\Desktop\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\output\Desktop\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <NoWarn>1591</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>1591</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Catel.Core, Version=4.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Catel.Core.4.4.0\lib\net45\Catel.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Catel.Extensions.Controls, Version=4.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Catel.Extensions.Controls.4.4.0\lib\net45\Catel.Extensions.Controls.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Catel.MVVM, Version=4.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Catel.MVVM.4.4.0\lib\net45\Catel.MVVM.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Esri.ArcGISRuntime, Version=10.2.7.0, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\ArcGIS SDKs\DotNet10.2.7\WindowsDesktop\bin\Esri.ArcGISRuntime.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.OrTools">
+      <HintPath>Utils\Google.OrTools.dll</HintPath>
+    </Reference>
+    <Reference Include="GraphSharp, Version=1.0.2.0, Culture=neutral, PublicKeyToken=f9c24778325a6b82, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\GraphSharp.1.1.0.0\lib\net40\GraphSharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="GraphSharp.Controls, Version=1.1.0.0, Culture=neutral, PublicKeyToken=f9c24778325a6b82, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\GraphSharp.1.1.0.0\lib\net40\GraphSharp.Controls.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MahApps.Metro, Version=1.2.4.0, Culture=neutral, PublicKeyToken=f4fb5a3c4d1e5b4f, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\MahApps.Metro.1.2.4.0\lib\net45\MahApps.Metro.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.GLEE">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Microsoft Research\GLEE\bin\Microsoft.GLEE.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.GLEE.Drawing">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Microsoft Research\GLEE\bin\Microsoft.GLEE.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.GLEE.GraphViewerGDI">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Microsoft Research\GLEE\bin\Microsoft.GLEE.GraphViewerGDI.dll</HintPath>
+    </Reference>
+    <Reference Include="QuickGraph, Version=3.6.61114.0, Culture=neutral, PublicKeyToken=f3fb40175eec2af3, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\QuickGraph.3.6.61119.7\lib\net4\QuickGraph.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="QuickGraph.Data, Version=3.6.61114.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\QuickGraph.3.6.61119.7\lib\net4\QuickGraph.Data.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="QuickGraph.Graphviz, Version=3.6.61114.0, Culture=neutral, PublicKeyToken=f3fb40175eec2af3, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\QuickGraph.3.6.61119.7\lib\net4\QuickGraph.Graphviz.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="QuickGraph.Serialization, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\QuickGraph.3.6.61119.7\lib\net4\QuickGraph.Serialization.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Catel.MVVM.4.4.0\lib\net45\System.Windows.Interactivity.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls, Version=2016.1.217.45, Culture=neutral, PublicKeyToken=5803cfa389c90ce7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Telerik\Telerik.Windows.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.GridView, Version=2016.1.217.45, Culture=neutral, PublicKeyToken=5803cfa389c90ce7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Telerik\Telerik.Windows.Controls.GridView.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Controls.Input, Version=2016.1.217.45, Culture=neutral, PublicKeyToken=5803cfa389c90ce7, processorArchitecture=MSIL" />
+    <Reference Include="Telerik.Windows.Controls.Navigation, Version=2016.1.217.45, Culture=neutral, PublicKeyToken=5803cfa389c90ce7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Telerik\Telerik.Windows.Controls.Navigation.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Data, Version=2016.1.217.45, Culture=neutral, PublicKeyToken=5803cfa389c90ce7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Telerik\Telerik.Windows.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WPFExtensions, Version=1.0.3437.34043, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\WPFExtensions.1.0.0\lib\WPFExtensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="BooleanToVisibilityConverter.cs" />
+    <Compile Include="Model\GraphClass.cs" />
+    <Compile Include="Model\GraphClassBidirectional.cs" />
+    <Compile Include="Model\GraphEdgeClass.cs" />
+    <Compile Include="Model\GraphVertexClass.cs" />
+    <Compile Include="Model\FeatureLayerMenuItem.cs" />
+    <Compile Include="SdkInstallNeeded.xaml.cs">
+      <DependentUpon>SdkInstallNeeded.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Services\MapViewService.cs" />
+    <Compile Include="Utils\GoogleTSP\cstsp.cs" />
+    <Compile Include="Utils\GraphUtils.cs" />
+    <Compile Include="Utils\MapUtils.cs" />
+    <Compile Include="Utils\SmoothUtil.cs" />
+    <Compile Include="Utils\TSP2\TspCalcEventArgs.cs" />
+    <Compile Include="Utils\TSP2\TSPVertices.cs" />
+    <Compile Include="Utils\TSP2\TSPVertice.cs" />
+    <Compile Include="Utils\TSP2\TSPEdge.cs" />
+    <Compile Include="Utils\TSP2\Population.cs" />
+    <Compile Include="Utils\TSP2\Tour.cs" />
+    <Compile Include="Utils\TSP2\Tsp.cs" />
+    <Compile Include="Utils\TSP2\TspEventArgs.cs" />
+    <Compile Include="Utils\TSPVertex.cs" />
+    <Compile Include="ViewsAndViewModels\AluerajausAlueValintaView.xaml.cs">
+      <DependentUpon>AluerajausAlueValintaView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewsAndViewModels\AluerajausAlueValintaViewModel.cs" />
+    <Compile Include="ViewsAndViewModels\GraphView.xaml.cs">
+      <DependentUpon>GraphView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewsAndViewModels\KarttaView.xaml.cs">
+      <DependentUpon>KarttaView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewsAndViewModels\KarttaViewModel.cs" />
+    <Compile Include="ViewsAndViewModels\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewsAndViewModels\GraphViewModel.cs" />
+    <Compile Include="ViewsAndViewModels\MainWindowViewModel.cs" />
+    <Compile Include="ViewsAndViewModels\ViewModelBase.cs" />
+    <Compile Include="WeakEventListener.cs" />
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="SdkInstallNeeded.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ViewsAndViewModels\AluerajausAlueValintaView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ViewsAndViewModels\GraphView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ViewsAndViewModels\KarttaView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ViewsAndViewModels\MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Interfaces\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Telerik\EQATEC.Analytics.Monitor.dll" />
+    <Content Include="Telerik\SharpDX.D3DCompiler.dll" />
+    <Content Include="Telerik\SharpDX.Direct2D1.dll" />
+    <Content Include="Telerik\SharpDX.Direct3D10.dll" />
+    <Content Include="Telerik\SharpDX.Direct3D9.dll" />
+    <Content Include="Telerik\SharpDX.dll" />
+    <Content Include="Telerik\SharpDX.DXGI.dll" />
+    <Content Include="Telerik\Telerik.Pivot.Core.dll" />
+    <Content Include="Telerik\Telerik.Pivot.DataProviders.Adomd.dll" />
+    <Content Include="Telerik\Telerik.Pivot.DataProviders.Queryable.dll" />
+    <Content Include="Telerik\Telerik.Pivot.DataProviders.Xmla.dll" />
+    <Content Include="Telerik\Telerik.VisualStudio.TestTools.UITest.Extension.ExtensionsCore.dll" />
+    <Content Include="Telerik\Telerik.Windows.Analytics.dll" />
+    <Content Include="Telerik\Telerik.Windows.Cloud.Controls.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Cloud.Controls.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Cloud.Controls.dll" />
+    <Content Include="Telerik\Telerik.Windows.Cloud.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Chart.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Chart.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Chart.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Chart.Direct2D.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Chart.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Chart.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Chart.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Chart.VisualStudio.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Chart.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Charting.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Charting.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Charting.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Charting.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Charting.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Data.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Data.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Data.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Data.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Data.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Data.VisualStudio.Design.dll" />
+    <Resource Include="Telerik\Telerik.Windows.Controls.Data.xml" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataServices.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataServices.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataServices.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataServices.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataServices.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataServices.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataServices50.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataServices60.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataVisualization.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataVisualization.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataVisualization.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataVisualization.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataVisualization.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataVisualization.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataVisualization.VisualStudio.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.DataVisualization.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.Extensions.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.Extensions.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.Extensions.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.Extensions.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.Extensions.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Diagrams.VisualStudio.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Docking.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Docking.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Docking.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Docking.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Docking.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Docking.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.EntityFramework.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.EntityFramework.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.EntityFramework.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.EntityFramework.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.EntityFramework.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.EntityFramework.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.EntityFramework60.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Expressions.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Expressions.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Expressions.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Expressions.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Expressions.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.FixedDocumentViewers.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.FixedDocumentViewers.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.FixedDocumentViewers.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.FixedDocumentViewersUI.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.FixedDocumentViewersUI.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.FixedDocumentViewersUI.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GanttView.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GanttView.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GanttView.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GanttView.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GanttView.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GanttView.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GridView.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GridView.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GridView.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GridView.Export.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GridView.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GridView.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.GridView.VisualStudio.Design.dll" />
+    <Resource Include="Telerik\Telerik.Windows.Controls.GridView.xml" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ImageEditor.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ImageEditor.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ImageEditor.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ImageEditor.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ImageEditor.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ImageEditor.VisualStudio.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Input.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Input.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Input.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Input.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Input.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Input.VisualStudio.Design.dll" />
+    <Resource Include="Telerik\Telerik.Windows.Controls.Input.xml" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Navigation.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Navigation.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Navigation.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Navigation.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Navigation.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Navigation.VisualStudio.Design.dll" />
+    <Resource Include="Telerik\Telerik.Windows.Controls.Navigation.xml" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Pivot.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Pivot.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Pivot.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Pivot.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Pivot.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Pivot.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.PivotFieldList.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.PivotFieldList.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.PivotFieldList.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.PivotFieldList.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.PivotFieldList.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.PivotFieldList.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.resources.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RibbonView.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RibbonView.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RibbonView.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RibbonView.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RibbonView.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RibbonView.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RichTextBoxUI.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RichTextBoxUI.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RichTextBoxUI.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RichTextBoxUI.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RichTextBoxUI.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.RichTextBoxUI.VisualStudio.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ScheduleView.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ScheduleView.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ScheduleView.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ScheduleView.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ScheduleView.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.ScheduleView.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Spreadsheet.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Spreadsheet.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.Spreadsheet.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Controls.VisualStudio.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Core.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Data.dll" />
+    <Resource Include="Telerik\Telerik.Windows.Data.xml" />
+    <Content Include="Telerik\Telerik.Windows.Diagrams.Core.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Core.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Expression.Design.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Fixed.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Flow.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Flow.FormatProviders.Pdf.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.FormatProviders.Html.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.FormatProviders.MsRichTextBoxXaml.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.FormatProviders.OpenXml.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.FormatProviders.Pdf.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.FormatProviders.Rtf.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.FormatProviders.Xaml.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Proofing.DataGrid.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Proofing.Dictionaries.En-US.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Proofing.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Proofing.RadGridView.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Spreadsheet.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.Spreadsheet.FormatProviders.Pdf.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.VisualStudio.Design.4.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Documents.VisualStudio.Design.5.0.dll" />
+    <Content Include="Telerik\Telerik.Windows.Maths.dll" />
+    <Content Include="Telerik\Telerik.Windows.PersistenceFramework.dll" />
+    <Content Include="Telerik\Telerik.Windows.Scheduling.Core.dll" />
+    <Content Include="Telerik\Telerik.Windows.Zip.dll" />
+    <Content Include="Telerik\Telerik.Windows.Zip.Extensions.dll" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

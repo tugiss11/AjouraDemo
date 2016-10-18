@@ -1,0 +1,51 @@
+﻿<catel:DataWindow
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:catel="http://catel.codeplex.com"
+             xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation" 
+			 x:Class="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.AluerajausAlueValintaView"
+             mc:Ignorable="d" MinWidth="300"  MaxWidth="900" MaxHeight="700" 
+            >
+
+    <catel:DataWindow.Resources>
+        
+    </catel:DataWindow.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100*"/>          
+        </Grid.ColumnDefinitions>
+        <StackPanel Margin="8">
+            <telerik:RadGridView
+                             x:Name="FeaturesGridView"
+                             GroupRenderMode="Flat"
+							 RowIndicatorVisibility="Collapsed"
+							 CanUserFreezeColumns="False"
+                             CanUserSortColumns="true"   
+	                         SelectionMode="Single"                          
+							 ShowGroupPanel="False"
+                             IsReadOnly="True"
+                             ItemsSource="{Binding Features}"
+                             SelectedItem="{Binding ValittuRivi, Mode=TwoWay}"
+							 IsFilteringAllowed="False"                           
+							 AutoGenerateColumns="True" 
+                             ScrollViewer.VerticalScrollBarVisibility="Visible" 
+                             ScrollViewer.HorizontalScrollBarVisibility="Visible" 
+                             ScrollViewer.CanContentScroll="True" HorizontalAlignment="Stretch"
+                             MaxHeight = "500" DataLoaded="FeaturesGridView_OnDataLoaded">
+
+                <telerik:StyleManager.Theme>
+                    <telerik:Windows8Theme/>
+                </telerik:StyleManager.Theme>               
+
+            </telerik:RadGridView>
+            <Button HorizontalAlignment="Right" Width="50" Content="Kohdista" Height="29" Command="{Binding ZoomToGeometriesCommand}"  
+                      ToolTip="Kohdista valittuun" >
+              
+              
+            </Button>
+        </StackPanel>
+    </Grid>
+</catel:DataWindow>
