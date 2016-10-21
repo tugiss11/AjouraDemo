@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,6 +33,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         public GraphUtils()
         {
             ShortestPathList = new List<ShortestPath>();
+            KokoajauraList = new List<List<GraphEdgeClass>>();
         }
 
         public static GraphUtils Instance
@@ -407,6 +409,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             foreach (var edge in Graph.Edges)
             {
                 edge.IsVisited = false;
+                edge.VisitedCount = 0;
             }
         }
 
@@ -587,6 +590,30 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 {
                     visited.IsVisited = true;
                 }
+            }
+        }
+
+        public void GetCountForEachEdgeInKokoajatUrat()
+        {
+            foreach (var path in KokoajauraList)
+            {
+                foreach (var edge in path)
+                {
+                    var graphEdge = Graph.Edges.FirstOrDefault(o => o.Id == edge.Id);
+                    if (graphEdge != null)
+                    {
+                        graphEdge.VisitedCount = graphEdge.VisitedCount + 1;
+                    }
+                    else
+                    {
+                        log.Error("Cannot find edge");
+                    }
+                }
+            }
+
+            foreach (var edge in Graph.Edges)
+            {
+                Debug.WriteLine(edge.VisitedCount);
             }
         }
     }
