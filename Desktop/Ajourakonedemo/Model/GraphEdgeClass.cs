@@ -22,12 +22,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
         public double Weight { get; set; }
         public bool IsVisited { get; set;} 
 
+        public int VisitedCount { get; set; }
+
         public GraphEdgeClass(int id, double sivukaltevuus, int kosteus, GraphVertexClass source, GraphVertexClass target)
             : base(source, target)
         {
             Id = id;
             Kosteus = kosteus;
             Sivukaltevuus = sivukaltevuus;
+            VisitedCount = 0;
         }
 
     

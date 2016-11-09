@@ -7,6 +7,7 @@ using Esri.ArcGISRuntime.Layers;
 using System.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGISRuntime.Samples.DesktopViewer.Utils;
@@ -17,6 +18,9 @@ using Catel.IoC;
 using Catel.Logging;
 using Catel.Messaging;
 using Esri.ArcGISRuntime.Geometry;
+using IronPython.Hosting;
+using Microsoft.Scripting.Hosting;
+
 
 namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 {
@@ -24,9 +28,14 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
     {
         public Command<FeatureLayerMenuItem> OpenFeaturesCommand { get; private set; }
         public Command UpdateMenuCommand { get; private set; }
+
+        public Command ShortestPathOnAllCommand { get; private set; }
+
         public Command LoadLayersCommand { get; private set; }
 
         public Command ShortestPathCommand { get; private set; }
+
+        public Command PythonCommand { get; private set; }
 
         public Command LoadGraphCommand { get; private set; }
 
@@ -136,12 +145,19 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         }
         public static readonly PropertyData TotalGenerationsProperty = RegisterProperty("TotalGenerations", typeof(int));
 
-        public double TotalLength
+        public double AjouraTotalLength
         {
             get { return GetValue<double>(TotalLengthProperty); }
             set { SetValue(TotalLengthProperty, value); }
         }
-        public static readonly PropertyData TotalLengthProperty = RegisterProperty("TotalLength", typeof(double));
+        public static readonly PropertyData TotalLengthProperty = RegisterProperty("AjouraTotalLength", typeof(double));
+
+        public double AjouraTotalArea
+        {
+            get { return GetValue<double>(AjouraTotalAreaProperty); }
+            set { SetValue(AjouraTotalAreaProperty, value); }
+        }
+        public static readonly PropertyData AjouraTotalAreaProperty = RegisterProperty("AjouraTotalArea", typeof(double));
 
         public double OldTotalLength
         {
@@ -149,6 +165,20 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             set { SetValue(OldTotalLengthProperty, value); }
         }
         public static readonly PropertyData OldTotalLengthProperty = RegisterProperty("OldTotalLength", typeof(double));
+
+        public double KokoajauraTotalLength
+        {
+            get { return GetValue<double>(KokoajauraTotalLengthProperty); }
+            set { SetValue(KokoajauraTotalLengthProperty, value); }
+        }
+        public static readonly PropertyData KokoajauraTotalLengthProperty = RegisterProperty("KokoajauraTotalLength", typeof(double));
+
+        public double KokoajauraTotalArea
+        {
+            get { return GetValue<double>(KokoajauraTotalAreaProperty); }
+            set { SetValue(KokoajauraTotalAreaProperty, value); }
+        }
+        public static readonly PropertyData KokoajauraTotalAreaProperty = RegisterProperty("KokoajauraTotalArea", typeof(double));
 
 
         public int Scale
@@ -247,6 +277,59 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             GeneralizeCommand = new Command(OnGeneralizeCommand, CanGraphCommand);
             ClearGeneralizationCommand = new Command(OnClearGeneralizationCommand, HasTspGraphics);
             SmoothenCommand = new Command(OnSmoothenCommand, CanGraphCommand);
+            PythonCommand = new Command(OnPythonCommand);
+            ShortestPathOnAllCommand = new Command(OnShortestPathOnAllCommand);
+        }
+
+        private async void OnShortestPathOnAllCommand()
+        {
+
+            List<MapPoint> pisteJoukko = GraphUtils.Instance.GraphVerticesAsMapPoint;
+
+            var startingVertex = await InitShortestPathCommand();
+
+            if (startingVertex == null)
+            {
+                return;
+            }
+
+            foreach (var piste in pisteJoukko)
+            {
+                GraphUtils.Instance.AddKokoajauraFromStartPointToEndPoint(piste, startingVertex);
+            }
+            var visitedCountLimit = 5;
+            GraphUtils.Instance.GetCountForEachEdgeInKokoajatUrat();
+
+            MapUtils.Instance.HighlightEdges(GraphUtils.Instance.Graph.Edges.Where(c => c.VisitedCount > visitedCountLimit));
+
+            GraphUtils.Instance.ResetVisited();
+            
+
+
+        }
+
+        private void OnPythonCommand()
+        {
+          
+            string fullPath = @"C:\sources\IronPytho\helloworld.py";
+            var engine = Python.CreateEngine();
+            ScriptScope scope = engine.CreateScope();
+
+            string importScript = "import sys" + Environment.NewLine +
+                      "sys.path.append( r\"{0}\" )" + Environment.NewLine +
+                      "from {1} import *";
+
+            // import the module
+            string scriptStr = string.Format(importScript,
+                                             Path.GetDirectoryName(fullPath),
+                                             Path.GetFileNameWithoutExtension(fullPath));
+            var importSrc = engine.CreateScriptSourceFromString(scriptStr, Microsoft.Scripting.SourceCodeKind.File);
+            importSrc.Execute(scope);
+
+            string expr = "getDateTimeString()";
+            var result = engine.Execute(expr, scope);
+            
+
         }
 
         private bool CanTspOnAllCommand()
@@ -491,22 +574,13 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         {
             try
             {
-                var graphicsList = new List<Graphic>();
-                foreach (var e in resultList)
-                {
-                    var graphEdges = MapUtils.Instance.GetGraphEdgeClassesFromEvents(e);
-                    var graphics = MapUtils.Instance.GetGraphicsFromGraphEdges(graphEdges);
-                    graphicsList.AddRange(graphics);
-                }
-                var geometries = graphicsList.Select(o => o.Geometry);
-                var unionGeometry = GeometryEngine.Union(geometries);
-                OldTotalLength = TotalLength;
-                TotalLength = Math.Abs(GeometryEngine.Length(unionGeometry));
-
+                OldTotalLength = AjouraTotalLength;
+                AjouraTotalLength = Math.Round(CalculationsUtil.Instance.CalculateTotalLength(resultList));
+                AjouraTotalArea = Math.Round(AjouraTotalLength * 4); //TODO Parametrisoi
+                CalculateKokoajaUraTotalLength();
             }
             catch (Exception ex)
             {
-
                 log.Error(ex);
             }
         }
@@ -565,16 +639,14 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private async void OnShortestPathCommand()
         {
-            MessageMediator.SendMessage("Set storage location", "NaytaInfoboksiKayttajalle");
-            GraphUtils.Instance.KokoajauraList = new List<List<GraphEdgeClass>>();
-            var startingVertex = await MapUtils.Instance.GetPointFromMap();
+            List<MapPoint> pisteJoukko = GraphUtils.Instance.GraphVerticesAsMapPoint;
+
+            var startingVertex = await InitShortestPathCommand();
             if (startingVertex == null)
             {
                 return;
             }
-            GraphUtils.Instance.SetKokoajauratAsVisitedAndResetShortestPaths();
-
-            var pisteJoukko = GraphUtils.Instance.GraphVerticesAsMapPoint;
+               
             while (GraphUtils.Instance.CheckIfKokoajaUratCoverTheKuvio(ref pisteJoukko, KokoajauraBufferValue))
             {
                 var endingVertex = MapUtils.Instance.FindFarmostPointInsideListOfPoint(startingVertex, pisteJoukko);
@@ -590,9 +662,23 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
             MapUtils.Instance.HighlightEdges(GraphUtils.Instance.KokoajauraList.SelectMany(o => o));
             MapUtils.Instance.ShowSmoothened(MapUtils.Instance.GraphicsLayer.SelectedGraphics, true);
+            CalculateKokoajaUraTotalLength();
         }
 
+        private async Task<MapPoint> InitShortestPathCommand()
+        {
+            MessageMediator.SendMessage("Set storage location", "NaytaInfoboksiKayttajalle");
+            GraphUtils.Instance.KokoajauraList = new List<List<GraphEdgeClass>>();
+            var startingVertex = await MapUtils.Instance.GetPointFromMap();
+            GraphUtils.Instance.SetKokoajauratAsVisitedAndResetShortestPaths();
+            return startingVertex;
+        }
 
+        private void CalculateKokoajaUraTotalLength()
+        {
+            KokoajauraTotalLength = Math.Round(CalculationsUtil.Instance.CalculateKokoajaUraTotalLength(GraphUtils.Instance.KokoajauraList));
+            KokoajauraTotalArea = Math.Round(KokoajauraTotalLength*5, 2); //TODO Parametrisoi
+        }
 
 
         private void OnMinimumSpanningTreeCommand()
@@ -666,6 +752,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<ObservableCollection<FeatureLayerMenuItem>>(MenuItemsProperty); }
             set { SetValue(MenuItemsProperty, value); }
         }
+
+    
 
         public static readonly PropertyData MenuItemsProperty = RegisterProperty("MenuItems", typeof(ObservableCollection<FeatureLayerMenuItem>), null);
 

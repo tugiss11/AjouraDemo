@@ -15,35 +15,21 @@
 
     <catel:StackGrid x:Name="LayoutRoot" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
+            <RowDefinition Height="25" />
             <RowDefinition Height="*" />
             <RowDefinition Height="25" />
         </Grid.RowDefinitions>
 
-        <!-- <StackPanel Grid.Row="0" Orientation="Horizontal">
-           <telerik:RadMenu x:Name="MainMenu">
-                <telerik:RadMenuItem Header="_File">
-                  
-                    <telerik:RadMenuSeparatorItem/>
-                    <telerik:RadMenuItem Header="Restart" InputGestureText="Alt+F1" Click="MenuItem_OnClick__Restart"/>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Background="White">
+            <telerik:RadMenu x:Name="MainMenu" Background="White">
+                <telerik:RadMenuItem Header="Menu" Background="White">
+                    <telerik:RadMenuItem Header="Python test"  Command="{Binding PythonCommand}"/>
                 </telerik:RadMenuItem>
 
             </telerik:RadMenu>
-           
-            <telerik:RadMenu x:Name="Menu2">
-                <telerik:RadMenuItem Header="FeatureLayers" ItemsSource="{Binding MenuItems}">
-                    <telerik:RadMenuItem.ItemContainerStyle>
-                        <Style TargetType="telerik:RadMenuItem">
-                            <Setter Property="Command" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=catel:DataWindow}, Path=ViewModel.OpenFeaturesCommand}" />
-                            <Setter Property="CommandParameter" Value="{Binding}" />
-                            <Setter Property="Header" Value="{Binding Header}" />
-                        </Style>
-                    </telerik:RadMenuItem.ItemContainerStyle>
-                </telerik:RadMenuItem>
-            </telerik:RadMenu>
-        </StackPanel>
-            -->
+            </StackPanel>
 
-        <Grid Row="0"> 
+                <Grid Row="1"> 
             <Grid.RowDefinitions>
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
@@ -72,6 +58,7 @@
                 <telerik:RadMenuItem Header="Add TSP vertices" Command="{Binding SetTspNodesCommand}"/>
                 <telerik:RadMenuItem Header="TSP on Selected" Command="{Binding TspCommand}"/>
                 <telerik:RadMenuItem Header="TSP on All" Command="{Binding TspOnAllCommand}"/>
+                <telerik:RadMenuItem Header="Shortest Path on all" Command="{Binding ShortestPathOnAllCommand}"/>
                 <telerik:RadMenuItem Header="Google TSP" Command="{Binding GoogleTspCommand}"/>
                 <telerik:RadMenuItem Header="Toggle Highlighted" Command="{Binding ClearHightlightCommand}"/>
                 <telerik:RadMenuItem Header="Draw Result" Command="{Binding DrawResultCommand}"/>
@@ -96,7 +83,7 @@
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=KokoajauraBufferValue, StringFormat=Buffer Parameter: {0}}"></TextBlock>
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding KokoajauraBufferValue}" LargeChange="25"  Minimum="0" Maximum="2500"></telerik:RadSlider>
                 <TextBlock Margin="5, 0, 2, 0" Text="Layers:"></TextBlock>
-                <ListView Margin="3"  ItemsSource="{Binding Layers}" Background="Transparent">
+                <ListView Margin="3" MinHeight="50"  ItemsSource="{Binding Layers}" Background="Transparent">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
@@ -106,8 +93,14 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=TotalLength, StringFormat=Total Length: {0}}"></TextBlock>
-                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=OldTotalLength, StringFormat=Previous value: {0}}"></TextBlock>
+             
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=AjouraTotalLength, StringFormat=Ajoura m2: {0}}"></TextBlock>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=AjouraTotalArea, StringFormat=Ajoura m2: {0}}"></TextBlock>
+
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=KokoajauraTotalLength, StringFormat=Kokoojaura m2: {0}}"></TextBlock>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=KokoajauraTotalArea, StringFormat=Kokoojaura m2: {0}}"></TextBlock>
+
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=OldTotalLength, StringFormat=Previous Ajoura m2: {0}}"></TextBlock>
 
 
 
@@ -116,7 +109,7 @@
         </Grid>
 
 
-        <StatusBar Grid.Row="1" Height="22" x:Name="StatusBar" HorizontalContentAlignment="Stretch">
+        <StatusBar Grid.Row="2" Height="22" x:Name="StatusBar" HorizontalContentAlignment="Stretch">
             <StatusBarItem >
                 <StackPanel Orientation="Horizontal">
                    
