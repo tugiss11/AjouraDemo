@@ -24,6 +24,7 @@
             <telerik:RadMenu x:Name="MainMenu" Background="White">
                 <telerik:RadMenuItem Header="Menu" Background="White">
                     <telerik:RadMenuItem Header="Python test"  Command="{Binding PythonCommand}"/>
+                    <telerik:RadMenuItem Header="VehicleRouting"  Command="{Binding VehicleRoutingCommand}"/>
                 </telerik:RadMenuItem>
 
             </telerik:RadMenu>

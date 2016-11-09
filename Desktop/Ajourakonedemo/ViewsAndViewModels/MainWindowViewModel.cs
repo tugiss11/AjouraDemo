@@ -19,6 +19,7 @@ using Catel.Logging;
 using Catel.Messaging;
 using Esri.ArcGISRuntime.Geometry;
 using IronPython.Hosting;
+using Microsoft.Glee.Drawing;
 using Microsoft.Scripting.Hosting;
 
 
@@ -279,7 +280,26 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             SmoothenCommand = new Command(OnSmoothenCommand, CanGraphCommand);
             PythonCommand = new Command(OnPythonCommand);
             ShortestPathOnAllCommand = new Command(OnShortestPathOnAllCommand);
+            VehicleRoutingCommand = new Command(OnVehicleRoutingCommand);
         }
+
+        private async void OnVehicleRoutingCommand()
+        {
+            MessageMediator.SendMessage("Set storage location", "NaytaInfoboksiKayttajalle");
+            var startingVertex = await MapUtils.Instance.GetPointFromMap();
+
+
+            var root = GraphUtils.Instance.Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(startingVertex.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(startingVertex.Y));
+
+          
+            var success = CapacitatedVehicleRoutingProblemWithTimeWindows.Start(GraphVertexList, root);
+            if (!success)
+            {
+                MessageMediator.SendMessage("Vehicle Routing failed", "NaytaInfoboksiKayttajalle");
+            }
+        }
+
+        public Command VehicleRoutingCommand { get; set; }
 
         private async void OnShortestPathOnAllCommand()
         {

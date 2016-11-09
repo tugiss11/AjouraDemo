@@ -80,8 +80,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\ArcGIS SDKs\DotNet10.2.7\WindowsDesktop\bin\Esri.ArcGISRuntime.dll</HintPath>
     </Reference>
-    <Reference Include="Google.OrTools">
-      <HintPath>Utils\Google.OrTools.dll</HintPath>
+    <Reference Include="Google.OrTools, Version=2.0.3393.8150, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Ajoura\or-tools_VisualStudio2015-64bit_v4.4.3842\bin\csharp\Google.OrTools.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Protobuf">
+      <HintPath>..\..\..\..\..\..\Ajoura\or-tools_VisualStudio2015-64bit_v4.4.3842\bin\csharp\Google.Protobuf.dll</HintPath>
     </Reference>
     <Reference Include="GraphSharp, Version=1.0.2.0, Culture=neutral, PublicKeyToken=f9c24778325a6b82, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\GraphSharp.1.1.0.0\lib\net40\GraphSharp.dll</HintPath>
@@ -214,6 +218,7 @@
     <Compile Include="Services\MapViewService.cs" />
     <Compile Include="Utils\CalculationsUtil.cs" />
     <Compile Include="Utils\GoogleTSP\cstsp.cs" />
+    <Compile Include="Utils\GoogleVRPTW\Cscvrptw.cs" />
     <Compile Include="Utils\GraphUtils.cs" />
     <Compile Include="Utils\MapUtils.cs" />
     <Compile Include="Utils\SmoothUtil.cs" />

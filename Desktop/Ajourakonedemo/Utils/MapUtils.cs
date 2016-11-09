@@ -949,5 +949,40 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
             return result;
         }
+
+        public void DrawRouteFromOrderList(long[] orderList, GraphVertexClass[] vertices)
+        {
+            for (int index = 0; index < orderList.Length-1; ++index) 
+            {
+                var startOrder = orderList[index];
+                var startIndex = vertices[startOrder].ID;
+
+
+                var endOrder = orderList[index + 1];
+                var endPoint = vertices[endOrder].ID;
+                if (startIndex != 0 && endPoint != 0)
+                {
+                    var polylineList = GetGraphEdgeClassesFromIds(startIndex, endPoint);
+                    HighlightEdges(polylineList, false);
+                }
+               
+            }
+        }
+
+        private IEnumerable<GraphEdgeClass> GetGraphEdgeClassesFromIds(long startIndex, long endPoint)
+        {
+            var edges = new List<GraphEdgeClass>();
+            var path = GraphUtils.Instance.ShortestPathAlgorithm(GraphUtils.Instance.Graph.Vertices.FirstOrDefault(o => o.ID == startIndex), GraphUtils.Instance.Graph.Vertices.FirstOrDefault(o => o.ID == endPoint));
+            if (path != null)
+            {
+                edges.AddRange(path);
+            }
+            else
+            {
+                log.Debug("Cannot find vertice");
+            }
+            return edges;
+            
+        }
     }
 }

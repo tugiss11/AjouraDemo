@@ -54,7 +54,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.GoogleTSP
         {
             RoutingModel routing = new RoutingModel(size, 1);
             // Setting first solution heuristic (cheapest addition).
-            routing.SetFirstSolutionStrategy(RoutingModel.ROUTING_PATH_CHEAPEST_ARC);
+            //routing.SetFirstSolutionStrategy(RoutingModel.ROUTING_PATH_CHEAPEST_ARC);
 
             // Setting the cost function.
             // Put a permanent callback to the distance accessor here. The callback
