@@ -1,0 +1,256 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.App" Collapsed="true">
+    <Position X="9.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAACAAAAAAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>App.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.BooleanToVisibilityConverter" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="11" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>BooleanToVisibilityConverter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.SdkInstallNeeded" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="16.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAA=</HashCode>
+      <FileName>SdkInstallNeeded.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.WeakEventListener&lt;TInstance, TSource, TEventArgs&gt;" Collapsed="true">
+    <Position X="16.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQgAAAIAAEAAAAAAAAAAAAAAAgAAAAAAAAA=</HashCode>
+      <FileName>WeakEventListener.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Model.FeatureLayerMenuItem" Collapsed="true">
+    <Position X="12.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAA=</HashCode>
+      <FileName>Model\FeatureLayerMenuItem.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Model.GraphClass" Collapsed="true">
+    <Position X="16.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\GraphClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Model.GraphClassBidirectional" Collapsed="true">
+    <Position X="7.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\GraphClassBidirectional.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Model.GraphEdgeClass" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAEgAAAIAEAABAAAABgCAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\GraphEdgeClass.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Model.GraphVertexClass" Collapsed="true">
+    <Position X="12.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAAEAAAAAAAAAAAAAAAAAACAAAAAYAA=</HashCode>
+      <FileName>Model\GraphVertexClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Properties.Settings" Collapsed="true">
+    <Position X="7.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Services.MapViewService" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="12.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAwCQBAAAIAAEAAAAAAAwAAQAACAABACABAAAAI=</HashCode>
+      <FileName>Services\MapViewService.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.GoogleTSP.GoogleTsp" Collapsed="true">
+    <Position X="14.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>Utils\GoogleTSP\cstsp.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.GraphUtils" Collapsed="true">
+    <Position X="11" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAEIINAQCBQAjgAwAAACAAAgEgAAAgSxEEhwABArIA=</HashCode>
+      <FileName>Utils\GraphUtils.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.ShortestPath" Collapsed="true">
+    <Position X="9.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAAAAAAAAAAAAAAIABAAAAAAAAAAAA=</HashCode>
+      <FileName>Utils\GraphUtils.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.MapUtils" Collapsed="true">
+    <Position X="11" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>iIAFKBkBYTJYIgQACACICUAAABIgGQEAQIhNABqIFBA=</HashCode>
+      <FileName>Utils\MapUtils.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.SmoothUtils" Collapsed="true">
+    <Position X="11" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAECAEACAAAAAAAAAAAAAAAAAAAAEAAQAAAAIAAAAA=</HashCode>
+      <FileName>Utils\SmoothUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2.Population" Collapsed="true">
+    <Position X="14.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACBAAAAAQAAAAAoAAAAAAAAA=</HashCode>
+      <FileName>Utils\TSP2\Population.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2.Tsp" Collapsed="true">
+    <Position X="14.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAABhAIAAAACAAICQAAAAAEAAAAAAAEAAAAAA=</HashCode>
+      <FileName>Utils\TSP2\Tsp.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2.TspCalcEventArgs" Collapsed="true">
+    <Position X="16.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAABAAAAAAAAAQAAAAEAAAAAAAEAAAIAAAAAA=</HashCode>
+      <FileName>Utils\TSP2\TspCalcEventArgs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2.TSPEdge" Collapsed="true">
+    <Position X="7.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAgAAAAAEAAAAAAAAAAAAAAAIAAAACAAEAAA=</HashCode>
+      <FileName>Utils\TSP2\TSPEdge.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2.TspEventArgs" Collapsed="true">
+    <Position X="9.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgBAAAIEAAAAABAAAAAQAAAAQAAAEAAAABA=</HashCode>
+      <FileName>Utils\TSP2\TspEventArgs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2.TSPVertice" Collapsed="true">
+    <Position X="12.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAEAAgIBAAACAEAAAABAAAAAAAAAAAA=</HashCode>
+      <FileName>Utils\TSP2\TSPVertice.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2.TSPVertices" Collapsed="true">
+    <Position X="14.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAAAAAgAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Utils\TSP2\TSPVertices.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tsp.Tour" Collapsed="true">
+    <Position X="12.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAGgAAQAIAAAAAAAQQAAAAAAAAAAAAAECAAAAAAAAAA=</HashCode>
+      <FileName>Utils\TSP2\Tour.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.Utils.TSP.TSPVertex" Collapsed="true">
+    <Position X="11" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAgAAAAAQAAAAAAIAAAAAAAAAAYAA=</HashCode>
+      <FileName>Utils\TSPVertex.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.AluerajausAlueValintaView" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="7.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAABAAAA=</HashCode>
+      <FileName>ViewsAndViewModels\AluerajausAlueValintaView.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.AluerajausAlueValintaViewModel" Collapsed="true">
+    <Position X="0.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAQAAIIAAEAgAAABEAgAAAAqAWFICAABAAEAICA=</HashCode>
+      <FileName>ViewsAndViewModels\AluerajausAlueValintaViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.GraphView" Collapsed="true">
+    <Position X="14.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ViewsAndViewModels\GraphView.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.GraphViewModel" Collapsed="true">
+    <Position X="5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QEEAYCAAEABAIAAAgAAAAAAAAAABAAgAAAAAAAIAAAA=</HashCode>
+      <FileName>ViewsAndViewModels\GraphViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.ViewModelGraphLayout" Collapsed="true">
+    <Position X="7.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ViewsAndViewModels\GraphViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.KarttaView" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="16.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAEAA=</HashCode>
+      <FileName>ViewsAndViewModels\KarttaView.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.KarttaViewModel" Collapsed="true">
+    <Position X="7.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAgAAIBAAAAAAEBAQCEAQiIogABgggAAFDUIBRAA=</HashCode>
+      <FileName>ViewsAndViewModels\KarttaViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.MainWindow" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ViewsAndViewModels\MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.MainWindowViewModel" Collapsed="true">
+    <Position X="2.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>JDSCRDEIAyyJblAo246CRdUJQQkBAjOGhHAAQyEiYAE=</HashCode>
+      <FileName>ViewsAndViewModels\MainWindowViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels.ViewModelBase" Collapsed="true">
+    <Position X="2.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEQAAAAAAAAAAAACYAAAQAAAAAAAIBAgAAAAAA=</HashCode>
+      <FileName>ViewsAndViewModels\ViewModelBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Tahoma" Size="8.25" />
+</ClassDiagram>

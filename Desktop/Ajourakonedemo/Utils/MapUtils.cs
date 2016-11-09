@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -337,6 +338,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     {
                         DisplayName = displayname,
                         IsVisible = isVisible,
+                        ID = displayname
                     };
                     if (shapeFileTable.GeometryType == GeometryType.Polygon)
                     {
@@ -392,46 +394,49 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
 
             GraphicsLayer.Renderer = CreateClassBreakRenderer();
-
-            Instance.Map.Layers.Add(GraphicsLayer);
-            foreach (var featurelayer in Map.Layers.OfType<FeatureLayer>())
+            var featurelayer = Map.Layers[Path.GetFileName(ConfigurationManager.AppSettings["Edges"])] as FeatureLayer;
+            if (featurelayer == null)
             {
-                var features = await featurelayer.FeatureTable.QueryAsync(new QueryFilter { WhereClause = "1 = 1" });
-                foreach (var feature in features)
+                return;
+            }
+            Instance.Map.Layers.Add(GraphicsLayer);
+
+            var features = await featurelayer.FeatureTable.QueryAsync(new QueryFilter { WhereClause = "1 = 1" });
+            foreach (var feature in features)
+            {
+
+                var geometry = feature.Geometry;
+                if (!CheckIfPointsAreInsideKuvio(geometry))
                 {
+                    continue;
+                }
 
-                    var geometry = feature.Geometry;
-                    if (!CheckIfPointsAreInsideKuvio(geometry))
+                feature.Attributes["sivukalt"] = Math.Abs(Convert.ToDouble(feature.Attributes["sivukalt"]));
+                try
+                {
+                    if (geometry is Polygon || geometry is Envelope)
                     {
-                        continue;
+                        GraphicsLayer.Graphics.Add(new Graphic(geometry, feature.Attributes));
+                    }
+                    else if (geometry is Polyline)
+                    {
+                        GraphicsLayer.Graphics.Add(new Graphic(geometry, feature.Attributes));
+                    }
+                    else if (geometry is MapPoint)
+                    {
+                        GraphicsLayer.Graphics.Add(new Graphic(geometry, feature.Attributes));
                     }
 
-                    feature.Attributes["sivukalt"] = Math.Abs(Convert.ToDouble(feature.Attributes["sivukalt"]));
-                    try
+                    if (geometry != null)
                     {
-                        if (geometry is Polygon || geometry is Envelope)
-                        {
-                            GraphicsLayer.Graphics.Add(new Graphic(geometry, feature.Attributes));
-                        }
-                        else if (geometry is Polyline)
-                        {
-                            GraphicsLayer.Graphics.Add(new Graphic(geometry, feature.Attributes));
-                        }
-                        else if (geometry is MapPoint)
-                        {
-                            GraphicsLayer.Graphics.Add(new Graphic(geometry, feature.Attributes));
-                        }
-
-                        if (geometry != null)
-                        {
-                            MapView.SetView(GeometryEngine.Buffer(geometry, 25));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        await this.GetDependencyResolver().Resolve<IMessageService>().ShowErrorAsync(ex);
+                        MapView.SetView(GeometryEngine.Buffer(geometry, 25));
                     }
                 }
+                catch (Exception ex)
+                {
+                    await this.GetDependencyResolver().Resolve<IMessageService>().ShowErrorAsync(ex);
+                }
+
 
 
                 _mes.SendMessage("Adding graphics done", "UpdateStatusBar");

@@ -731,7 +731,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             ShowModalDialog(viewmodel, typeof(GraphView));
         }
 
-        private async void OnLoadLayersCommand()
+        internal async void OnLoadLayersCommand()
         {
             var viewModelManager = (IViewModelManager)Catel.IoC.ServiceLocator.Default.ResolveType(typeof(IViewModelManager));
             var viewModel = (KarttaViewModel)viewModelManager.ActiveViewModels.FirstOrDefault(vm => vm is KarttaViewModel);

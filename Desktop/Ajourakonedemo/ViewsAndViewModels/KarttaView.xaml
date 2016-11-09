@@ -7,11 +7,12 @@
              xmlns:catel="http://catel.codeplex.com"
                    xmlns:services="clr-namespace:ArcGISRuntime.Samples.DesktopViewer.Services"
                    xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+                   xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
                    mc:Ignorable="d" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"
              VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
          >
     <catel:UserControl.Resources>
-
+        <catel:BooleanToHidingVisibilityConverter x:Key="VisibilityConverter" />
     </catel:UserControl.Resources>
 
     <Grid>
@@ -37,13 +38,34 @@
                         </TextBlock>
                     </Border>
 
-               
-                      
-                        <TextBlock Name="Infoteksti" Text="{Binding Path=InfoTeksti, NotifyOnTargetUpdated=True}">
+
+                  
+                            <telerik:RadGridView
+                Name="MyOverlay"
+                GroupRenderMode="Flat"
+				RowIndicatorVisibility="Collapsed"
+				CanUserFreezeColumns="False"
+                CanUserSortColumns="False"   
+	            SelectionMode="Single"                          
+				ShowGroupPanel="False"
+                
+                ItemsSource="{Binding OverlayDataContext}"
+				IsFilteringAllowed="False"
+				AutoGenerateColumns="False"
+                telerik:StyleManager.Theme="Windows8"               
+                HorizontalAlignment="Left"
+                ShowColumnHeaders="False"
+                RowHeight="10"
+                FontSize="10"               
+                Visibility="{Binding OnkoMapTooltipVisible, Converter={StaticResource VisibilityConverter}}">
+                                <telerik:RadGridView.Columns>
+                                    <telerik:GridViewDataColumn DataMemberBinding="{Binding Key}" IsReadOnly="True" Width="Auto" TextWrapping="Wrap" />
+                                    <telerik:GridViewDataColumn  DataMemberBinding="{Binding Value}" IsReadOnly="True"  Width="Auto"  TextWrapping="Wrap"/>
+                                </telerik:RadGridView.Columns>
+                            </telerik:RadGridView>
+
+                            <TextBlock Name="Infoteksti" Text="{Binding Path=InfoTeksti, NotifyOnTargetUpdated=True}">
                         </TextBlock>
-               
-
-
 
                 </esri:OverlayItemsControl>
 
@@ -55,8 +77,14 @@
                 <i:EventTrigger EventName="NavigationCompleted">
                     <catel:EventToCommand x:Name="CmdMapViewNavigationCompletedCommand" Command="{Binding MapViewNavigationCompletedCommand}" DisableAssociatedObjectOnCannotExecute="False" PassEventArgsToCommand="True" />
                 </i:EventTrigger>
-                </i:Interaction.Triggers>
 
+                <i:EventTrigger EventName="MouseMove">
+                    <catel:EventToCommand x:Name="CmdMapViewMouseMoveCommand" Command="{Binding MapViewMouseMoveCommand}" DisableAssociatedObjectOnCannotExecute="False" PassEventArgsToCommand="True" />
+                </i:EventTrigger>
+
+            </i:Interaction.Triggers>
+
+         
         </esri:MapView>
         <TextBlock Name="KoordinaatitBox" Width="65" Height="Auto" HorizontalAlignment="Right" VerticalAlignment="Bottom" TextAlignment="Left" Text="{Binding Koordinaatit}" Background="White" Margin="0,0,0,0" FontSize="8"></TextBlock>
     </Grid>
