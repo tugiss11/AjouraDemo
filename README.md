@@ -5,6 +5,7 @@
 * Kulkukelpoisuus mukaan painotuksiin
 * Painotusten optimointi
 * Uraehdotusten tunnuslukujen logitus
+* Reittiopmointien massa-ajo
 
 ## Avoimet asiat
 
