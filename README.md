@@ -19,4 +19,9 @@
 
 * OptaPlanner reititykseen?
 
+## Gridin muodostus
+
+* Runkoluku laskettu pinta-alan mukaan
+* Maastotietokannasta rajaavia kohteita
+
 
