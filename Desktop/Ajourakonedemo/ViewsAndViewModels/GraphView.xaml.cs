@@ -13,7 +13,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             InitializeComponent();
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
             ((GraphViewModel)ViewModel).CreateGraphAsync();
         }

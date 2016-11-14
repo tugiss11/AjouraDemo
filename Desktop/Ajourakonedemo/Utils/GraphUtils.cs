@@ -53,10 +53,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public GraphClass Graph
         {
-            get
-            {
-                return _graph;
-            }
+            get { return _graph; }
             set { _graph = value; }
         }
 
@@ -222,10 +219,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
             IEnumerable<GraphEdgeClass> path;
             if (tryGetPaths(target, out path))
-                foreach (var edge in path)
-                {
-                    edgleList.Add(edge);
-                }
+                edgleList.AddRange(path);
             return edgleList;
         }
 
@@ -348,6 +342,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         private int _tourCount;
         private double _oldFitness;
         private double _tourToShowCount;
+
         private void tsp_foundNewBestTour(object sender, TspEventArgs e)
         {
 
@@ -370,6 +365,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         }
 
         int _oldThousand;
+
         private void tsp_newCalcStarted(object sender, TspCalcEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(e.Message))
@@ -501,7 +497,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 var points = new List<MapPoint>();
                 var points2 = new List<MapPoint>();
-                if (kokoajauraPoints.Count > groupsize*1.5)
+                if (kokoajauraPoints.Count > groupsize * 1.5)
                 {
                     var sorted = new List<MapPoint>();
                     List<MapPoint> sortedSubgroups;
@@ -603,6 +599,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     if (graphEdge != null)
                     {
                         graphEdge.VisitedCount = graphEdge.VisitedCount + 1;
+                        if (graphEdge.VisitedCount >= 5)
+                        {
+                            graphEdge.IsVisited = true;
+                        }
                     }
                     else
                     {
@@ -616,17 +616,52 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 Debug.WriteLine(edge.VisitedCount);
             }
         }
-    }
+
+        public void CalculateShortestPaths(List<GraphVertexClass> vertices, GraphVertexClass root)
+        {
+            ShortestPathList = new List<ShortestPath>();
+            var shortestPathList = new List<ShortestPath>();
+            vertices.Add(root);
+            var verticesArray = vertices.ToArray();
+            Parallel.ForEach(vertices, vertice =>
+            {
+                vertice.Neighbours = new int[verticesArray.Length];
+
+                vertice.Distances = new long[verticesArray.Length];
+                for (var index = 0; index < verticesArray.Length; ++index)
+                {
+                    var startVertice = vertice;
+                    var endVertice = verticesArray[index];
+                    var edges = ShortestPathAlgorithm(startVertice, endVertice);
+
+                    if (edges.Any())
+                    {
+                        long distance = edges.Aggregate(0, (current, edge) => current + Convert.ToInt32(edge.Weight));
+                        vertice.Neighbours[index] = endVertice.ID;
+                        vertice.Distances[index] = distance;
+                        shortestPathList.Add(new ShortestPath {ShortestPathEdges = edges, VertexId1 = startVertice.ID, VertexId2 = endVertice.ID, Distance = distance});
+                    }
+                    else
+                    {
+                        vertice.Neighbours[index] = 0;
+                        vertice.Distances[index] = 0;
+                    }
+
+                }
+            });
+            ShortestPathList = shortestPathList;
+        }
 
 
-    public class ShortestPath
-    {
-        public int VertexId1 { get; set; }
-        public int VertexId2 { get; set; }
+        public class ShortestPath
+        {
+            public int VertexId1 { get; set; }
+            public int VertexId2 { get; set; }
 
-        public double Distance { get; set; }
+            public double Distance { get; set; }
 
-        public List<GraphEdgeClass> ShortestPathEdges { get; set; }
+            public List<GraphEdgeClass> ShortestPathEdges { get; set; }
+        }
     }
 }
 

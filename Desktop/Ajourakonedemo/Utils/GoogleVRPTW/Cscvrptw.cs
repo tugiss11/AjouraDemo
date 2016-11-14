@@ -20,6 +20,7 @@ using ArcGISRuntime.Samples.DesktopViewer.Utils;
 using Catel.IoC;
 using Catel.Messaging;
 using Google.OrTools.ConstraintSolver;
+using Microsoft.Scripting.Utils;
 
 /// <summary>
 ///   Sample showing how to model and solve a capacitated vehicle routing
@@ -80,27 +81,57 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
     /// </summary>
     class Manhattan : NodeEvaluator2
     {
-        public Manhattan(Position[] locations, int coefficient)
+        public Manhattan(Position[] locations, int coefficient, GraphVertexClass[] vertices, bool useShortestPath)
         {
             this.locations_ = locations;
             this.coefficient_ = coefficient;
+            this.vertices_ = vertices;
+            this.useShortestPath = useShortestPath;
         }
 
-        public override long Run(int first_index, int second_index)
+        public override long Run(int firstIndex, int secondIndex)
         {
-            if (first_index >= locations_.Length ||
-                second_index >= locations_.Length)
+
+            long distance = 0;
+            if (firstIndex >= locations_.Length ||
+                secondIndex >= locations_.Length)
             {
-                return 0;
+                return distance;
             }
-            return (Math.Abs(locations_[first_index].x_ -
-                             locations_[second_index].x_) +
-                    Math.Abs(locations_[first_index].y_ -
-                             locations_[second_index].y_)) * coefficient_;
+
+            var startVertice = vertices_[firstIndex];
+            var endVertice = vertices_[secondIndex];
+            if (startVertice.ID == endVertice.ID)
+            {
+                return distance;
+            }
+           
+            if (useShortestPath)
+            {
+                for(var i = 0; i < startVertice.Neighbours.Length; i++)
+                {
+                    if (startVertice.Neighbours[i] == endVertice.ID)
+                    {
+                        distance = startVertice.Distances[i];
+                        return distance;
+                    }
+                }
+               
+            }
+            else
+            {
+                distance = (Math.Abs(locations_[firstIndex].x_ - locations_[secondIndex].x_) + Math.Abs(locations_[firstIndex].y_ - locations_[secondIndex].y_)) * coefficient_;
+            }
+            return distance;
+
+
         }
+
 
         private Position[] locations_;
         private int coefficient_;
+        private GraphVertexClass[] vertices_;
+        private bool useShortestPath;
     };
 
     /// <summary>
@@ -213,7 +244,7 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
         order_time_windows_ = new TimeWindow[numberOfVertices];
         order_penalties_ = new int[numberOfVertices];
 
-     
+
 
         for (int index = 0; index < numberOfVertices; ++index)
         {
@@ -270,10 +301,12 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
         }
     }
 
+
+  
     /// <summary>
     ///   Solves the current routing problem.
     /// </summary>
-    private void Solve(int number_of_orders, int number_of_vehicles)
+    private void Solve(int number_of_orders, int number_of_vehicles, GraphVertexClass[] verticeList, bool useShortestPath)
     {
         Console.WriteLine("Creating model with " + number_of_orders +
                           " orders and " + number_of_vehicles + " vehicles.");
@@ -286,7 +319,7 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
 
         // Setting up dimensions
         const int big_number = 100000;
-        NodeEvaluator2 manhattan_callback = new Manhattan(locations_, 1);
+        var manhattan_callback = new Manhattan(locations_, 1, verticeList, useShortestPath);
         model.AddDimension(
             manhattan_callback, big_number, big_number, false, "time");
         NodeEvaluator2 demand_callback = new Demand(order_demands_);
@@ -296,8 +329,7 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
         for (int vehicle = 0; vehicle < number_of_vehicles; ++vehicle)
         {
             int cost_coefficient = vehicle_cost_coefficients_[vehicle];
-            NodeEvaluator2 manhattan_cost_callback =
-                new Manhattan(locations_, cost_coefficient);
+            var manhattan_cost_callback = new Manhattan(locations_, cost_coefficient, verticeList, useShortestPath);
             model.SetVehicleCost(vehicle, manhattan_cost_callback);
             model.CumulVar(model.End(vehicle), "time").SetMax(
                 vehicle_end_time_[vehicle]);
@@ -313,9 +345,8 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
         }
 
         // Solving
-        RoutingSearchParameters search_parameters =
-            RoutingModel.DefaultSearchParameters();
-        search_parameters.FirstSolutionStrategy =FirstSolutionStrategy.Types.Value.AllUnperformed;
+        RoutingSearchParameters search_parameters = RoutingModel.DefaultSearchParameters();
+        search_parameters.FirstSolutionStrategy = FirstSolutionStrategy.Types.Value.AllUnperformed;
 
         Console.WriteLine("Search");
         Assignment solution = model.SolveWithParameters(search_parameters);
@@ -343,7 +374,7 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
                 String route = "Vehicle " + vehicle + ": ";
                 var orderlist = new List<long>();
                 long order = model.Start(vehicle);
-               
+
                 if (model.IsEnd(solution.Value(model.NextVar(order))))
                 {
                     route += "Empty";
@@ -368,7 +399,7 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
                         "Time(" + solution.Min(time) + ", " + solution.Max(time) + ")";
                 }
 
-               
+
                 output += route + "\n";
                 ListOfOrderLists.Add(orderlist);
             }
@@ -378,16 +409,17 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
 
 
 
-    public static bool Start(List<GraphVertexClass> vertices, GraphVertexClass root)
+    public static bool Start(List<GraphVertexClass> vertices, int vertexGroupSize, bool useShortestPath)
     {
-        if (vertices == null || vertices.Count < 4 || root == null)
+        if (vertices == null || vertices.Count < 4)
         {
-          
+
             return false;
         }
-
+        StartVertice = vertices.Last();
+        vertices.RemoveAt(vertices.Count -1);
         Vertices = vertices.ToArray();
-        StartVertice = root;
+     
         CapacitatedVehicleRoutingProblemWithTimeWindows problem =
             new CapacitatedVehicleRoutingProblemWithTimeWindows();
         int x_max = 1000000;
@@ -403,8 +435,21 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
 
 
         int orders = Vertices.Length;
-        int vehicles = 2;
-        int capacity = Vertices.Length/vehicles;
+
+        int capacity = vertexGroupSize;
+        int vehicles = (orders - 1) / capacity + 1;
+
+        var verticeList = new List<GraphVertexClass>();
+        verticeList.AddRange(Vertices);
+        var i = 0;
+        while (i < vehicles)
+        {
+            verticeList.Add(StartVertice);
+            verticeList.Add(StartVertice);
+            i++;
+        }
+
+
         problem.GetOrdersFromGraphNodes(vehicles);
         //problem.SetVehicle();
         //problem.BuildOrders(orders,
@@ -421,26 +466,19 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
                            end_time,
                            capacity,
                            cost_coefficient_max);
-        problem.Solve(orders, vehicles);
+        problem.Solve(orders, vehicles, verticeList.ToArray(), useShortestPath);
 
-        var verticeList = new List<GraphVertexClass>();
-        verticeList.AddRange(Vertices);
-        var i = 0;
-        while(  i < vehicles)
-        {
-            verticeList.Add(root);
-            verticeList.Add(root);
-            i++;
-        }
-        
+      
+
 
         foreach (var orderlist in ListOfOrderLists)
         {
-            MapUtils.Instance.DrawRouteFromOrderList(orderlist.ToArray(), verticeList.ToArray());
-            MessageBox.Show("Lap done!");
+            MapUtils.Instance.GraphicsLayer.ClearSelection();
+            MapUtils.Instance.DrawRouteFromOrderList(orderlist.ToArray(), verticeList.ToArray(), useShortestPath);
+            MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, false);
         }
 
-       
+
         return true;
     }
 

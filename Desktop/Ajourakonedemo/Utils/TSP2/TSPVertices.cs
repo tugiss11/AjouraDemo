@@ -46,7 +46,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
         public void CalculateVertexDistances(CancellationToken token, int numberOfCloseCities)
         {
             var capacity = this.Count*this.Count;
-            var shortestPathList = new List<ShortestPath>(capacity);
+            var shortestPathList = new List<GraphUtils.ShortestPath>(capacity);
             var j = 0;
             this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage(string.Format("Calculating shortest paths for {0} vertices (takes about 30 seconds for 271 points)", this.Count), "UpdateStatusBar");
             var sw2 = new Stopwatch();
@@ -84,10 +84,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
             }
         }
 
-        public List<ShortestPath> GetDistances(TSPVertice vertexToVisit, List<GraphVertexClass> allVertices)
+        public List<GraphUtils.ShortestPath> GetDistances(TSPVertice vertexToVisit, List<GraphVertexClass> allVertices)
         {
             vertexToVisit.Distances.Clear();
-            var shortestPathList = new List<ShortestPath>();
+            var shortestPathList = new List<GraphUtils.ShortestPath>();
             for (int i = 0; i < this.Count; i++)
             {
                 var startVertice = allVertices.FirstOrDefault(o => o.ID == vertexToVisit.Id);
@@ -110,7 +110,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2
                         var distance = edges.Aggregate(0, (current, edge) => current + Convert.ToInt32(edge.Weight));
                         //var distance = edges.Count*17;
                         vertexToVisit.Distances.Add(distance);
-                        shortestPathList.Add(new ShortestPath { ShortestPathEdges = edges, VertexId1 = startVertice.ID, VertexId2 = endVertice.ID, Distance = distance });
+                        shortestPathList.Add(new GraphUtils.ShortestPath { ShortestPathEdges = edges, VertexId1 = startVertice.ID, VertexId2 = endVertice.ID, Distance = distance });
                    } 
                     else
                     {

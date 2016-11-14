@@ -23,25 +23,24 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public List<Geometry> SmoothPolyline(Polyline path)
+        public Geometry SmoothPolyline(Polyline path)
         {
             var tempResult = GetSmoothenedLines(path);
             var i = 0;
             while (i < 3)
             {
-                var tempList = new List<Geometry>();
-                foreach (var line in tempResult)
-                {
-                    tempList.AddRange(GetSmoothenedLines((Polyline)line));
-                }
-                tempResult = tempList;
+             
+               
+                var tempGeo = GetSmoothenedLines((Polyline)tempResult);
+                
+                tempResult = tempGeo;
                 i++;
             }
             return tempResult;
 
         }
 
-        private static List<Geometry> GetSmoothenedLines(Polyline path)
+        private static Geometry GetSmoothenedLines(Polyline path)
         {
             var tempResult = new List<Geometry>();
             foreach (var part in path.Parts)
@@ -60,7 +59,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 output.AddPoint((MapPoint) GeometryEngine.Project(part.EndPoint, new SpatialReference(3067)));
                 tempResult.Add(output.ToGeometry());
             }
-            return tempResult;
+            return GeometryEngine.Union(tempResult);
         }
     }
 }

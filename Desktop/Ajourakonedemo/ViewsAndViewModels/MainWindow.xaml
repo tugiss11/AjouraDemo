@@ -53,36 +53,43 @@
                 <telerik:RadMenuItem Header="Layer Count" Click="MenuItem_OnClick__ShowLayerCount"/>
                 <telerik:RadMenuItem Header="Load Layers" Command="{Binding LoadLayersCommand}"/>
                 <telerik:RadMenuItem Header="Toggle Graphics" Command="{Binding ToggleGraphicsCommand}"/>
-                <telerik:RadMenuItem Header="Load Graph" Command="{Binding LoadGraphCommand}"/>
+               <!-- <telerik:RadMenuItem Header="Load Graph" Command="{Binding LoadGraphCommand}"/>
                 <telerik:RadMenuItem Header="Minimum Spanning Tree" Command="{Binding MinimumSpanningTreeCommand}"/>
-                <telerik:RadMenuItem Header="Shortest Path" Command="{Binding ShortestPathCommand}"/>
-                <telerik:RadMenuItem Header="Add TSP vertices" Command="{Binding SetTspNodesCommand}"/>
+                <telerik:RadMenuItem Header="Shortest Path" Command="{Binding ShortestPathCommand}"/> -->
+                <telerik:RadMenuItem Header="Add vertices to route" Command="{Binding SetTspNodesCommand}"/>
+                <telerik:RadMenuItem Header="Vehicle Routing" Command="{Binding VehicleRoutingCommand}"/>
                 <telerik:RadMenuItem Header="TSP on Selected" Command="{Binding TspCommand}"/>
                 <telerik:RadMenuItem Header="TSP on All" Command="{Binding TspOnAllCommand}"/>
                 <telerik:RadMenuItem Header="Shortest Path on all" Command="{Binding ShortestPathOnAllCommand}"/>
-                <telerik:RadMenuItem Header="Google TSP" Command="{Binding GoogleTspCommand}"/>
-                <telerik:RadMenuItem Header="Toggle Highlighted" Command="{Binding ClearHightlightCommand}"/>
+             <!--   <telerik:RadMenuItem Header="Google TSP" Command="{Binding GoogleTspCommand}"/>
+                <telerik:RadMenuItem Header="Toggle Highlighted" Command="{Binding ClearHightlightCommand}"/> -->
                 <telerik:RadMenuItem Header="Draw Result" Command="{Binding DrawResultCommand}"/>
                 <telerik:RadMenuItem Header="Generalize Result" Command="{Binding GeneralizeCommand}"/>
                 <telerik:RadMenuItem Header="Smoothen Result" Command="{Binding SmoothenCommand}"/>
                 <telerik:RadMenuItem Header="Clear Result" Command="{Binding ClearGeneralizationCommand}"/>
-                <TextBlock Margin="5, 20, 2, 0" Text="Paths:"></TextBlock>
+             <!--   <TextBlock Margin="5, 20, 2, 0" Text="Paths:"></TextBlock>
                 <telerik:RadComboBox Margin="5,0,2,20" Width="100"  ItemsSource="{Binding TourPaths}"  SelectedItem="{Binding SelectedPath}"></telerik:RadComboBox>
                 <telerik:RadComboBox Margin="5,0,2,20" Width="100"  ItemsSource="{Binding EventList}"  SelectedItem="{Binding SelectedEvent}"></telerik:RadComboBox>
              
-                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=VertexGroupSize, StringFormat=Vertex Group Size: {0}}"></TextBlock>
-                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding VertexGroupSize}" Orientation="Horizontal" Minimum="10" Maximum="100"></telerik:RadSlider>
+              
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=InitialPopulation, StringFormat=Initial population: {0}}"></TextBlock>
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding InitialPopulation}" Orientation="Horizontal" Minimum="10000" Maximum="1000000"></telerik:RadSlider>
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=TotalGenerations, StringFormat=Total generations: {0}:}"></TextBlock>
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding TotalGenerations}" LargeChange="10000" Minimum="100000" Maximum="10000000"></telerik:RadSlider>
-                <TextBlock Margin="5, 0, 2, 0"  Text="{Binding Path=SlopeWeightMultiplier, StringFormat=Slope Weight Multiplier: {0}}"></TextBlock>
-                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding SlopeWeightMultiplier}" LargeChange="5" Minimum="0" Maximum="100"></telerik:RadSlider>
-                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=WetnessWeightMultiplier, StringFormat=Wetness Weight Multiplier: {0}}"></TextBlock> 
-                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding WetnessWeightMultiplier}" LargeChange="5" Minimum="0" Maximum="100"></telerik:RadSlider>
+               
+              
+           
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=KokoajauraBufferValue, StringFormat=Buffer Parameter: {0}}"></TextBlock>
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding KokoajauraBufferValue}" LargeChange="25"  Minimum="0" Maximum="2500"></telerik:RadSlider> -->
+                <CheckBox Margin="5" IsChecked="{Binding UseShortestPaths}" Content="Use shortest paths"></CheckBox>
                 <CheckBox Margin="5" IsChecked="{Binding UseVisitedEdges}" Content="Use visited edges"></CheckBox>
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=KokoajauraBufferValue, StringFormat=Buffer Parameter: {0}}"></TextBlock>
-                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding KokoajauraBufferValue}" LargeChange="25"  Minimum="0" Maximum="2500"></telerik:RadSlider>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=VertexGroupSize, StringFormat=Vertex Group Size: {0}}"></TextBlock>
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding VertexGroupSize}" Orientation="Horizontal" Minimum="10" Maximum="100"></telerik:RadSlider>
+                <TextBlock Margin="5, 0, 2, 0"  Text="{Binding Path=SlopeWeightMultiplier, StringFormat=Slope Weight Multiplier: {0}}"></TextBlock>
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding SlopeWeightMultiplier}" LargeChange="5" Minimum="0" Maximum="100"></telerik:RadSlider>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=WetnessWeightMultiplier, StringFormat=Wetness Weight Multiplier: {0}}"></TextBlock>
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding WetnessWeightMultiplier}" LargeChange="5" Minimum="0" Maximum="300"></telerik:RadSlider>
                 <TextBlock Margin="5, 0, 2, 0" Text="Layers:"></TextBlock>
                 <ListView Margin="3" MinHeight="50"  ItemsSource="{Binding Layers}" Background="Transparent">
                     <ListView.ItemTemplate>
@@ -94,7 +101,18 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-             
+                <TextBlock Margin="5, 0, 2, 0" Text="Graphics:"></TextBlock>
+                <ListView Margin="3" MinHeight="50" MaxHeight="200"  ItemsSource="{Binding ResultGraphics}" Background="Transparent">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox IsChecked="{Binding IsVisible, Mode=TwoWay}" Margin="2" />
+                                <TextBlock Text="Route" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=AjouraTotalLength, StringFormat=Ajoura m2: {0}}"></TextBlock>
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=AjouraTotalArea, StringFormat=Ajoura m2: {0}}"></TextBlock>
 

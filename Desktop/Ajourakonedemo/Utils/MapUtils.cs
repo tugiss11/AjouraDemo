@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,6 +24,7 @@ using Esri.ArcGISRuntime.Layers;
 using Esri.ArcGISRuntime.Symbology;
 using Tsp;
 using Application = System.Windows.Application;
+using Color = System.Windows.Media.Color;
 using Geometry = Esri.ArcGISRuntime.Geometry.Geometry;
 
 namespace ArcGISRuntime.Samples.DesktopViewer.Utils
@@ -808,11 +810,24 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             return result;
         }
 
+        public Color GetRandomColor()
+        {
+            Random randonGen = new Random();
+            var randomColor =
+                Color.FromArgb(
+                  255,
+                  (byte)randonGen.Next(255),
+                  (byte)randonGen.Next(255),
+                  (byte)randonGen.Next(255));
+            return randomColor;
+        }
+
         public void ShowGeneralizedRoutes(IEnumerable<Graphic> graphics, bool generalize)
         {
+
             var symbol = new SimpleLineSymbol
             {
-                Color = Colors.DeepPink,
+                Color = GetRandomColor(),
                 Style = SimpleLineStyle.Solid,
                 Width = 5
             };
@@ -842,7 +857,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 Style = SimpleLineStyle.Solid,
                 Width = 5
             };
-            ShortestPath path = GraphUtils.Instance.ShortestPathList.FirstOrDefault(o => (o.VertexId1 == tspVertexList[tspVertex1].Id && o.VertexId2 == tspVertexList[tspVertex2].Id) || (o.VertexId1 == tspVertexList[tspVertex2].Id && o.VertexId2 == tspVertexList[tspVertex1].Id));
+            GraphUtils.ShortestPath path = GraphUtils.Instance.ShortestPathList.FirstOrDefault(o => (o.VertexId1 == tspVertexList[tspVertex1].Id && o.VertexId2 == tspVertexList[tspVertex2].Id) || (o.VertexId1 == tspVertexList[tspVertex2].Id && o.VertexId2 == tspVertexList[tspVertex1].Id));
             if (path != null)
             {
                 var idCollection = path.ShortestPathEdges.Select(o => o.Id);
@@ -871,7 +886,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         {
             var symbol = new SimpleLineSymbol
             {
-                Color = Colors.DeepPink,
+                Color = GetRandomColor(),
                 Style = SimpleLineStyle.Solid,
                 Width = 5
             };
@@ -889,12 +904,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             if (geometry.GeometryType == GeometryType.Polyline)
             {
                 var geometryList = SmoothUtils.Instance.SmoothPolyline((Polyline)geometry);
-                foreach (var geo in geometryList)
-                {
 
-                    TspGraphicsLayer.Graphics.Add(new Graphic(geo, symbol));
-                }
-
+                symbol.Color = GetRandomColor();
+                TspGraphicsLayer.Graphics.Add(new Graphic(geometryList, symbol));
             }
 
 
@@ -955,9 +967,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             return result;
         }
 
-        public void DrawRouteFromOrderList(long[] orderList, GraphVertexClass[] vertices)
+        public void DrawRouteFromOrderList(long[] orderList, GraphVertexClass[] vertices, bool useShortestPaths = false)
         {
-            for (int index = 0; index < orderList.Length-1; ++index) 
+            for (int index = 0; index < orderList.Length - 1; ++index)
             {
                 var startOrder = orderList[index];
                 var startIndex = vertices[startOrder].ID;
@@ -965,12 +977,50 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
                 var endOrder = orderList[index + 1];
                 var endPoint = vertices[endOrder].ID;
-                if (startIndex != 0 && endPoint != 0)
+                if (startIndex != 0 && endPoint != 0 && startIndex != endPoint)
                 {
-                    var polylineList = GetGraphEdgeClassesFromIds(startIndex, endPoint);
+                    IEnumerable<GraphEdgeClass> polylineList = null;
+
+                    if (useShortestPaths)
+                    {
+                        try
+                        {
+                            foreach (var o in GraphUtils.Instance.ShortestPathList)
+                            {
+                                if (o == null)
+                                {
+                                    log.Error("Error finding path");
+                                    continue;
+                                }
+                                if ((o.VertexId1 == startIndex && o.VertexId2 == endPoint) || (o.VertexId1 == startIndex && o.VertexId2 == endPoint))
+                                {
+                                    polylineList = o.ShortestPathEdges;
+                                    break;
+                                }
+
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                            log.Error("Cannot find route {0} -> {1}: {2}", endPoint, startIndex, ex.Message);
+                        }
+
+
+                    }
+                    else
+                    {
+                        polylineList = GetGraphEdgeClassesFromIds(startIndex, endPoint);
+                    }
+                    if (polylineList == null)
+                    {
+                        log.Error("Cannot find route {0} -> {1}", endPoint, startIndex);
+                        continue;
+                    }
+
                     HighlightEdges(polylineList, false);
                 }
-               
+
             }
         }
 
@@ -987,7 +1037,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 log.Debug("Cannot find vertice");
             }
             return edges;
-            
+
         }
     }
 }

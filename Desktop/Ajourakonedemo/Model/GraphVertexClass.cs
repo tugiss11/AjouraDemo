@@ -23,7 +23,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
 
         public override string ToString()
         {
-            return string.Format("{2}: X:{1} Y:{0}", ID, X, Y);
+            return string.Format("{0}: X:{1} Y:{2}", ID, X, Y);
         }
 
         public MapPoint AsMapPoint()
@@ -34,5 +34,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
             }
             return null;
         }
+
+        public long[] Distances;
+        public int[] Neighbours;
     }
 }
