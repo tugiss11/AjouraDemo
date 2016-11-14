@@ -6,6 +6,8 @@
 * Painotusten optimointi
 * Uraehdotusten tunnuslukujen logitus
 * Reittiopmointien massa-ajo
+* Laskennan optimointi
+* Demoversio käyttöliittymästä
 
 ## Avoimet asiat
 
