@@ -4,6 +4,7 @@
 
 * Kulkukelpoisuus mukaan painotuksiin
 * Painotusten optimointi
+* Uraehdotusten tunnuslukujen logitus
 
 ## Avoimet asiat
 
