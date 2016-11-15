@@ -18,15 +18,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             get { return _instance; }
         }
 
-        public double CalculateTotalLength(List<TspEventArgs> resultList)
+        public double CalculateTotalLength(GraphicCollection resultList)
         {
-            var graphicsList = new List<Graphic>();
-            foreach (var e in resultList)
-            {
-                var graphEdges = MapUtils.Instance.GetGraphEdgeClassesFromEvents(e);
-                var graphics = MapUtils.Instance.GetGraphicsFromGraphEdges(graphEdges);
-                graphicsList.AddRange(graphics);
-            }
+            var graphicsList = new List<Graphic>(resultList);
             var geometries = graphicsList.Select(o => o.Geometry);
             var unionGeometry = GeometryEngine.Union(geometries);
             return Math.Abs(GeometryEngine.Length(unionGeometry));

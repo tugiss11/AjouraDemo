@@ -49,6 +49,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public int WetnessWeightMultiplier { get; set; }
 
+        public int KelpoisuusWeightMultiplier { get; set; }
+
         private GraphClass _graph;
 
         public GraphClass Graph
@@ -104,8 +106,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     var kaltevuus = Convert.ToDouble(feature.Attributes["sivukalt"]);
                     var kosteus = Convert.ToInt32(feature.Attributes["kulkukelp"]);
 
+                    if (Math.Abs(kaltevuus) > MapUtils.Instance.MaxAllowedSlope)
+                    {
+                        continue;
+                    }
+
                     var edge = new GraphEdgeClass(Convert.ToInt32(feature.Attributes[objectIdField]), kaltevuus, kosteus, startVertex, endVertex);
                     g.AddVerticesAndEdge(edge);
+
+                    
                 }
             }
             Graph = g;
@@ -625,6 +634,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             var verticesArray = vertices.ToArray();
             Parallel.ForEach(vertices, vertice =>
             {
+                var tempList = new List<ShortestPath>();
                 vertice.Neighbours = new int[verticesArray.Length];
 
                 vertice.Distances = new long[verticesArray.Length];
@@ -639,15 +649,16 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                         long distance = edges.Aggregate(0, (current, edge) => current + Convert.ToInt32(edge.Weight));
                         vertice.Neighbours[index] = endVertice.ID;
                         vertice.Distances[index] = distance;
-                        shortestPathList.Add(new ShortestPath {ShortestPathEdges = edges, VertexId1 = startVertice.ID, VertexId2 = endVertice.ID, Distance = distance});
+                        tempList.Add(new ShortestPath {ShortestPathEdges = edges, VertexId1 = startVertice.ID, VertexId2 = endVertice.ID, Distance = distance});
                     }
                     else
                     {
-                        vertice.Neighbours[index] = 0;
-                        vertice.Distances[index] = 0;
+                        vertice.Neighbours[index] = endVertice.ID;
+                        vertice.Distances[index] = 999999999;
                     }
 
                 }
+                shortestPathList.AddRange(tempList);
             });
             ShortestPathList = shortestPathList;
         }

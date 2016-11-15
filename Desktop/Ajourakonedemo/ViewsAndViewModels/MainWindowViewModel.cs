@@ -125,6 +125,17 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         public static readonly PropertyData InitialPopulationProperty = RegisterProperty("InitialPopulation", typeof(int));
 
+        public int MaxAllowedSlope
+        {
+            get { return GetValue<int>(MaxAllowedSlopeProperty); }
+            set { SetValue(MaxAllowedSlopeProperty, value); }
+        }
+
+        public static readonly PropertyData MaxAllowedSlopeProperty = RegisterProperty("MaxAllowedSlope", typeof(int), 0, MaxAllowedSlopePropertyChangedEventHandler);
+
+      
+
+
         public int VertexGroupSize
         {
             get { return GetValue<int>(VertexGroupSizeProperty); }
@@ -222,6 +233,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             GraphUtils.Instance.WetnessWeightMultiplier = (int)e.NewValue;
         }
 
+        private static void MaxAllowedSlopePropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
+        {
+            MapUtils.Instance.MaxAllowedSlope = (int) e.NewValue;
+        }
+
         public bool UseVisitedEdges
         {
             get { return GetValue<bool>(UseVisitedEdgesProperty); }
@@ -247,6 +263,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             InitialPopulation = 10000;
             TotalGenerations = 210000;
             KokoajauraBufferValue = 175;
+            MaxAllowedSlope = 12;
         }
 
         private void InitMessages()
@@ -304,7 +321,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
                 if (UseVisitedEdges)
                 {
-                    GetEdgesFromKokooajaUrat(startingVertex);
+                   var edges = GetEdgesFromKokooajaUrat(startingVertex);
+                    GraphUtils.Instance.KokoajauraList = new List<List<GraphEdgeClass>> { edges.ToList() };
                 }
 
 
@@ -341,6 +359,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             {
                 ResultGraphics = MapUtils.Instance.TspGraphicsLayer.Graphics;
                 OnUpdateStatusBar("Vehicle routing success!");
+                CalculateTotalLength();
                 GraphUtils.Instance.ResetVisited();
             }
         }
@@ -627,7 +646,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                         }
                     }
                     EventList = resultList;
-                    CalculateTotalLength(resultList);
+                    //CalculateTotalLength(resultList);
                 }
                 else
                 {
@@ -656,12 +675,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             }
         }
 
-        private void CalculateTotalLength(List<TspEventArgs> resultList)
+        private void CalculateTotalLength()
         {
             try
             {
                 OldTotalLength = AjouraTotalLength;
-                AjouraTotalLength = Math.Round(CalculationsUtil.Instance.CalculateTotalLength(resultList));
+                AjouraTotalLength = Math.Round(CalculationsUtil.Instance.CalculateTotalLength(ResultGraphics));
                 AjouraTotalArea = Math.Round(AjouraTotalLength * 4); //TODO Parametrisoi
                 CalculateKokoajaUraTotalLength();
             }

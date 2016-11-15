@@ -88,9 +88,14 @@
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding VertexGroupSize}" Orientation="Horizontal" Minimum="10" Maximum="100"></telerik:RadSlider>
                 <TextBlock Margin="5, 0, 2, 0"  Text="{Binding Path=SlopeWeightMultiplier, StringFormat=Slope Weight Multiplier: {0}}"></TextBlock>
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding SlopeWeightMultiplier}" LargeChange="5" Minimum="0" Maximum="100"></telerik:RadSlider>
-                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=WetnessWeightMultiplier, StringFormat=Wetness Weight Multiplier: {0}}"></TextBlock>
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=WetnessWeightMultiplier, StringFormat=Korjuukelpoisuus Weight Multiplier: {0}}"></TextBlock>
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding WetnessWeightMultiplier}" LargeChange="5" Minimum="0" Maximum="300"></telerik:RadSlider>
+
+                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=MaxAllowedSlope, StringFormat=Max allowed sideway slope: {0}}"></TextBlock>
+                <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding MaxAllowedSlope}" LargeChange="5" Minimum="0" Maximum="40"></telerik:RadSlider>
                 <TextBlock Margin="5, 0, 2, 0" Text="Layers:"></TextBlock>
+     
+
                 <ListView Margin="3" MinHeight="50"  ItemsSource="{Binding Layers}" Background="Transparent">
                     <ListView.ItemTemplate>
                         <DataTemplate>

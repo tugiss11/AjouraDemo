@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,15 +34,13 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         private static readonly MapUtils _instance = new MapUtils();
         private IViewModelManager _viewModelManager;
         private IMessageMediator _mes;
+        private string kulkukelpoisuusString = "kulkukelp";
+        private string sivukaltString = "sivukalt";
 
         public MapUtils()
         {
             SavedHightlights = new List<Graphic>();
             //MessageMediator.Register<TspEventArgs>(this, SaveTspEventArgs, "UpdateRoutesOnMap");
-
-
-
-
         }
 
         private readonly SimpleFillSymbol _simpleFillSymbol = new SimpleFillSymbol
@@ -168,6 +165,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         }
 
         public IEnumerable<Graphic> SavedHightlights { get; set; }
+        public int MaxAllowedSlope { get; set; }
 
         #region Methods
 
@@ -413,7 +411,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     continue;
                 }
 
-                feature.Attributes["sivukalt"] = Math.Abs(Convert.ToDouble(feature.Attributes["sivukalt"]));
+                var kaltevuus = Math.Abs(Convert.ToDouble(feature.Attributes[sivukaltString]));
+
+
+                if (kaltevuus > MaxAllowedSlope)
+                {
+                    continue;
+                }
+                feature.Attributes[sivukaltString] = kaltevuus;
+
                 try
                 {
                     if (geometry is Polygon || geometry is Envelope)
@@ -461,16 +467,23 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         private Renderer CreateClassBreakRenderer()
         {
             ClassBreaksRenderer renderer = new ClassBreaksRenderer();
-            renderer.Field = "sivukalt";
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.Green, -2, 2));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, -13, -10));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, 10, 13));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, -6, -2));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, 2, 6));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, -10, -6));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, 6, 10));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, 13, 50));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, -50, -13));
+            renderer.Field = kulkukelpoisuusString;
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.Green, 1, 1));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, 2, 2));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, 3, 3));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, 4, 4));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, 5, 5));
+
+
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Green, 1, 1));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, -13, -10));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, 10, 13));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, -6, -2));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, 2, 6));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, -10, -6));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, 6, 10));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, 13, 50));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, -50, -13));
             return renderer;
 
 
@@ -485,7 +498,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 Color = color,
                 Style = SimpleLineStyle.Solid,
-                Width = 2
+                Width = 3
             };
             return classBreakInfo1;
         }
@@ -822,21 +835,24 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             return randomColor;
         }
 
-        public void ShowGeneralizedRoutes(IEnumerable<Graphic> graphics, bool generalize)
+        public void ShowGeneralizedRoutes(IEnumerable<Graphic> graphics, bool generalize, Color color = default(Color))
         {
-
+         
+             
             var symbol = new SimpleLineSymbol
             {
-                Color = GetRandomColor(),
+                Color = color,
                 Style = SimpleLineStyle.Solid,
                 Width = 5
             };
+
             var geometries = graphics.Where(o => o.Geometry != null).Select(g => g.Geometry);
             var geometry = GeometryEngine.Union(geometries);
             if (generalize)
             {
                 geometry = GeometryEngine.Generalize(geometry, 20, false);
             }
+           
             TspGraphicsLayer.Graphics.Add(new Graphic(geometry, symbol));
 
         }
@@ -967,16 +983,19 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             return result;
         }
 
-        public void DrawRouteFromOrderList(long[] orderList, GraphVertexClass[] vertices, bool useShortestPaths = false)
+        public void DrawRouteFromOrderList(long[] orderList, GraphVertexClass[] vertices, bool useShortestPaths = false, Color color = default(Color), GraphVertexClass startVertice = null)
         {
+            DrawRoutesToStartLocation(orderList, vertices, useShortestPaths, startVertice);
+
             for (int index = 0; index < orderList.Length - 1; ++index)
             {
                 var startOrder = orderList[index];
                 var startIndex = vertices[startOrder].ID;
-
+              
 
                 var endOrder = orderList[index + 1];
                 var endPoint = vertices[endOrder].ID;
+                DrawRouteEndpoints(vertices[startOrder], vertices[endOrder], color);
                 if (startIndex != 0 && endPoint != 0 && startIndex != endPoint)
                 {
                     IEnumerable<GraphEdgeClass> polylineList = null;
@@ -985,28 +1004,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     {
                         try
                         {
-                            foreach (var o in GraphUtils.Instance.ShortestPathList)
-                            {
-                                if (o == null)
-                                {
-                                    log.Error("Error finding path");
-                                    continue;
-                                }
-                                if ((o.VertexId1 == startIndex && o.VertexId2 == endPoint) || (o.VertexId1 == startIndex && o.VertexId2 == endPoint))
-                                {
-                                    polylineList = o.ShortestPathEdges;
-                                    break;
-                                }
-
-                            }
+                            polylineList = FindShortestPathFromSavedPaths(startIndex, endPoint);
                         }
                         catch (Exception ex)
                         {
-
                             log.Error("Cannot find route {0} -> {1}: {2}", endPoint, startIndex, ex.Message);
                         }
-
-
                     }
                     else
                     {
@@ -1022,6 +1025,58 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 }
 
             }
+        }
+
+        private void DrawRoutesToStartLocation(long[] orderList, GraphVertexClass[] vertices, bool useShortestPaths, GraphVertexClass startVertice)
+        {
+            if (startVertice != null)
+            {
+                if (useShortestPaths)
+                {
+                    if (startVertice.ID != vertices[orderList[0]].ID)
+                    {
+                        var polylineList = FindShortestPathFromSavedPaths(startVertice.ID, vertices[orderList[0]].ID);
+                        HighlightEdges(polylineList, false);
+                        polylineList = FindShortestPathFromSavedPaths(startVertice.ID, vertices[orderList[orderList.Length - 1]].ID);
+                        HighlightEdges(polylineList, false);
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<GraphEdgeClass> FindShortestPathFromSavedPaths(int startIndex, int endPoint)
+        {
+            IEnumerable<GraphEdgeClass> polylineList = null;
+            foreach (var o in GraphUtils.Instance.ShortestPathList)
+            {
+                if (o == null)
+                {
+                    log.Error("Error finding path");
+                    continue;
+                }
+                if ((o.VertexId1 == startIndex && o.VertexId2 == endPoint) || (o.VertexId1 == startIndex && o.VertexId2 == endPoint))
+                {
+                    polylineList = o.ShortestPathEdges;
+
+                    break;
+                }
+            }
+            return polylineList;
+        }
+
+        private void DrawRouteEndpoints(GraphVertexClass graphVertexClass, GraphVertexClass graphVertexClass1, Color color)
+        {
+            var symbol = new SimpleMarkerSymbol()
+            {
+                Size = 11,
+                Style = SimpleMarkerStyle.Diamond,
+                Color = color,
+                Outline = new SimpleLineSymbol() { Style = SimpleLineStyle.Solid, Color = Colors.Black, Width = 0.1}
+
+            };
+
+            TspVerticesLayer.Graphics.Add(new Graphic(new MapPoint((double)graphVertexClass.X, (double)graphVertexClass.Y, new SpatialReference(3067)), symbol));
+            TspVerticesLayer.Graphics.Add(new Graphic(new MapPoint((double)graphVertexClass1.X, (double)graphVertexClass1.Y, new SpatialReference(3067)), symbol));
         }
 
         private IEnumerable<GraphEdgeClass> GetGraphEdgeClassesFromIds(long startIndex, long endPoint)

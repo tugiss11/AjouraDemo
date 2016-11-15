@@ -296,8 +296,7 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
             vehicle_ends_[vehicle] = index + 1;
             locations_[index + 1] = staringPosition;
             vehicle_end_time_[vehicle] = end_time;
-            vehicle_cost_coefficients_[vehicle] =
-                random_generator.Next(cost_coefficient_max) + 1;
+            vehicle_cost_coefficients_[vehicle] = 1;
         }
     }
 
@@ -473,9 +472,10 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
 
         foreach (var orderlist in ListOfOrderLists)
         {
+            var color = MapUtils.Instance.GetRandomColor();
             MapUtils.Instance.GraphicsLayer.ClearSelection();
-            MapUtils.Instance.DrawRouteFromOrderList(orderlist.ToArray(), verticeList.ToArray(), useShortestPath);
-            MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, false);
+            MapUtils.Instance.DrawRouteFromOrderList(orderlist.ToArray(), verticeList.ToArray(), useShortestPath, color, StartVertice);
+            MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, false, color);
         }
 
 

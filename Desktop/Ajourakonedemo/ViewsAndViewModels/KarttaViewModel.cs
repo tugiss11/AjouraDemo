@@ -140,7 +140,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         public async Task InitializeMapAsync()
         {
+
             Mediator.SendMessage("Loading layers...", "UpdateStatusBar");
+            Map.Layers.Clear();
 
             string wmsPath = ConfigurationManager.AppSettings["taustakarttaWms"];
             await MapUtils.Instance.LoadWmsLayerAsync(wmsPath, "Taustakartta", string.Empty, false);
@@ -175,7 +177,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             //await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path2, "Hex");
 
 
-            Mediator.SendMessage("Loading done", "UpdateStatusBar");
+            Mediator.SendMessage("Loading done!", "UpdateStatusBar");
             Mediator.SendMessage(true, "OnLoaded");
 
 
