@@ -133,8 +133,19 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 if (_tspVerticesLayer == null)
                 {
                     _tspVerticesLayer = new GraphicsLayer { DisplayName = "Point Graphics" };
+                    var labeling = new LabelProperties();
+                    var labelClasses = new AttributeLabelClassCollection { new AttributeLabelClass() { IsVisible = true, TextExpression = "[ID]", LabelPlacement = LabelPlacement.PointAboveCenter, Symbol =  new TextSymbol()
+                    {
+                        BorderLineColor = Colors.Black,
+                        BorderLineSize = 0.1,
+                        Font = new SymbolFont() {FontFamily = "Courier New", FontSize = 12, FontStyle =  SymbolFontStyle.Normal}
+                    } } };
+                    labeling.LabelClasses = labelClasses;
+                    _tspVerticesLayer.Labeling = labeling;
                     Map.Layers.Add(TspVerticesLayer);
                 }
+
+
                 return _tspVerticesLayer;
             }
             set { _tspVerticesLayer = value; }
@@ -681,6 +692,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 TspVerticesLayer = new GraphicsLayer();
                 TspVerticesLayer.DisplayName = "Point Graphics";
+                var labeling = new LabelProperties();
+                var labelClasses = new AttributeLabelClassCollection { new AttributeLabelClass() { IsVisible = true, TextExpression = "[ID]", LabelPlacement = LabelPlacement.PointAboveCenter } };
+                labeling.LabelClasses = labelClasses;
+                TspVerticesLayer.Labeling = labeling;
                 Map.Layers.Add(TspVerticesLayer);
             }
             var symbol = new SimpleMarkerSymbol()
@@ -835,10 +850,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             return randomColor;
         }
 
-        public void ShowGeneralizedRoutes(IEnumerable<Graphic> graphics, bool generalize, Color color = default(Color))
+        public void ShowGeneralizedRoutes(IEnumerable<Graphic> graphics, bool generalize, Color color = default(Color), bool smoothen = false)
         {
-         
-             
             var symbol = new SimpleLineSymbol
             {
                 Color = color,
@@ -852,8 +865,14 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 geometry = GeometryEngine.Generalize(geometry, 20, false);
             }
-           
-            TspGraphicsLayer.Graphics.Add(new Graphic(geometry, symbol));
+            if (smoothen)
+            {
+                geometry = SmoothUtils.Instance.SmoothPolyline((Polyline)geometry);
+            }
+
+            var graphic = new Graphic(geometry, symbol) {IsVisible = false};
+
+            TspGraphicsLayer.Graphics.Add(graphic);
 
         }
 
@@ -985,7 +1004,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public void DrawRouteFromOrderList(long[] orderList, GraphVertexClass[] vertices, bool useShortestPaths = false, Color color = default(Color), GraphVertexClass startVertice = null)
         {
-            DrawRoutesToStartLocation(orderList, vertices, useShortestPaths, startVertice);
+            //DrawRoutesToStartLocation(orderList, vertices, useShortestPaths, startVertice);
 
             for (int index = 0; index < orderList.Length - 1; ++index)
             {
@@ -995,7 +1014,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
                 var endOrder = orderList[index + 1];
                 var endPoint = vertices[endOrder].ID;
-                DrawRouteEndpoints(vertices[startOrder], vertices[endOrder], color);
+                DrawRouteEndpoints(vertices[startOrder], vertices[endOrder], index, color);
                 if (startIndex != 0 && endPoint != 0 && startIndex != endPoint)
                 {
                     IEnumerable<GraphEdgeClass> polylineList = null;
@@ -1017,8 +1036,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     }
                     if (polylineList == null)
                     {
-                        log.Error("Cannot find route {0} -> {1}", endPoint, startIndex);
-                        continue;
+                        polylineList = GetGraphEdgeClassesFromIds(startIndex, endPoint);
+                        if (polylineList == null)
+                        {
+                            log.Error("Cannot find route {0} -> {1}", endPoint, startIndex);
+                            continue;
+                        }
                     }
 
                     HighlightEdges(polylineList, false);
@@ -1064,7 +1087,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             return polylineList;
         }
 
-        private void DrawRouteEndpoints(GraphVertexClass graphVertexClass, GraphVertexClass graphVertexClass1, Color color)
+        private void DrawRouteEndpoints(GraphVertexClass startVertex, GraphVertexClass endVertex, int index, Color color)
         {
             var symbol = new SimpleMarkerSymbol()
             {
@@ -1075,8 +1098,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
             };
 
-            TspVerticesLayer.Graphics.Add(new Graphic(new MapPoint((double)graphVertexClass.X, (double)graphVertexClass.Y, new SpatialReference(3067)), symbol));
-            TspVerticesLayer.Graphics.Add(new Graphic(new MapPoint((double)graphVertexClass1.X, (double)graphVertexClass1.Y, new SpatialReference(3067)), symbol));
+            TspVerticesLayer.Graphics.Add(new Graphic(new MapPoint((double)startVertex.X, (double)startVertex.Y, new SpatialReference(3067)), new List<KeyValuePair<string, object>>{ new KeyValuePair<string, object>("ID", index)}, symbol));
+            TspVerticesLayer.Graphics.Add(new Graphic(new MapPoint((double)endVertex.X, (double)endVertex.Y, new SpatialReference(3067)), new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("ID", string.Empty) }, symbol));
         }
 
         private IEnumerable<GraphEdgeClass> GetGraphEdgeClassesFromIds(long startIndex, long endPoint)

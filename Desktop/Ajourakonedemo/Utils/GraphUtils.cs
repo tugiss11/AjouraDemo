@@ -626,7 +626,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
         }
 
-        public void CalculateShortestPaths(List<GraphVertexClass> vertices, GraphVertexClass root)
+        public void CalculateShortestPaths(List<GraphVertexClass> vertices, GraphVertexClass root, bool calculateOnlyNeighbors)
         {
             ShortestPathList = new List<ShortestPath>();
             var shortestPathList = new List<ShortestPath>();
@@ -634,16 +634,51 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             var verticesArray = vertices.ToArray();
             Parallel.ForEach(vertices, vertice =>
             {
-                var tempList = new List<ShortestPath>();
-                vertice.Neighbours = new int[verticesArray.Length];
+                var tempList = ShortestPaths(root, calculateOnlyNeighbors, vertice, verticesArray);
+                shortestPathList.AddRange(tempList);
+            });
+            ShortestPathList = shortestPathList;
+        }
 
-                vertice.Distances = new long[verticesArray.Length];
-                for (var index = 0; index < verticesArray.Length; ++index)
+        private List<ShortestPath> ShortestPaths(GraphVertexClass root, bool calculateOnlyNeighbors, GraphVertexClass vertice, GraphVertexClass[] verticesArray)
+        {
+            var tempList = new List<ShortestPath>();
+            vertice.Neighbours = new int[verticesArray.Length];
+
+
+            vertice.Distances = new long[verticesArray.Length];
+            for (var index = 0; index < verticesArray.Length; ++index)
+            {
+                var startVertice = vertice;
+                var endVertice = verticesArray[index];
+
+                if (startVertice.ID == endVertice.ID)
                 {
-                    var startVertice = vertice;
-                    var endVertice = verticesArray[index];
-                    var edges = ShortestPathAlgorithm(startVertice, endVertice);
+                    vertice.Neighbours[index] = endVertice.ID;
+                    vertice.Distances[index] = 0;
+                    continue;
+                }
 
+
+                var isAdjacent = false;
+                if (calculateOnlyNeighbors)
+                {
+                    foreach (var adjacentEdge in Graph.AdjacentEdges(startVertice))
+                    {
+                        if (adjacentEdge.IsAdjacent(endVertice))
+                        {
+                            isAdjacent = true;
+                        }
+                    }
+                }
+                if (!isAdjacent && calculateOnlyNeighbors && vertice.ID != root.ID && endVertice.ID != root.ID)
+                {
+                    vertice.Neighbours[index] = endVertice.ID;
+                    vertice.Distances[index] = int.MaxValue;
+                }
+                else
+                {
+                    var edges = ShortestPathAlgorithm(startVertice, endVertice);
                     if (edges.Any())
                     {
                         long distance = edges.Aggregate(0, (current, edge) => current + Convert.ToInt32(edge.Weight));
@@ -654,13 +689,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     else
                     {
                         vertice.Neighbours[index] = endVertice.ID;
-                        vertice.Distances[index] = 999999999;
+                        vertice.Distances[index] = int.MaxValue;
                     }
-
                 }
-                shortestPathList.AddRange(tempList);
-            });
-            ShortestPathList = shortestPathList;
+            }
+            return tempList;
         }
 
 
@@ -672,6 +705,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             public double Distance { get; set; }
 
             public List<GraphEdgeClass> ShortestPathEdges { get; set; }
+
+            public override string ToString()
+            {
+                return string.Format("From {0} to {1}. Cost: {2}", VertexId1, VertexId2, Distance);
+            }
         }
     }
 }

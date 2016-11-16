@@ -6,6 +6,7 @@
         xmlns:desktopViewer="clr-namespace:ArcGISRuntime.Samples.DesktopViewer"
         xmlns:catel="http://catel.codeplex.com"
         xmlns:viewsAndViewModels="clr-namespace:ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         Title="Ajourakonedemo"  ShowInTaskbar="True" ResizeMode="CanResize" SizeToContent="Manual" WindowStartupLocation="Manual" WindowState="Maximized">
 
     <Window.Resources>
@@ -83,7 +84,9 @@
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding KokoajauraBufferValue}" LargeChange="25"  Minimum="0" Maximum="2500"></telerik:RadSlider> -->
                 <CheckBox Margin="5" IsChecked="{Binding UseShortestPaths}" Content="Use shortest paths"></CheckBox>
                 <CheckBox Margin="5" IsChecked="{Binding UseVisitedEdges}" Content="Use visited edges"></CheckBox>
-                <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=KokoajauraBufferValue, StringFormat=Buffer Parameter: {0}}"></TextBlock>
+                <CheckBox Margin="5" IsChecked="{Binding CalculateOnlyNeighbors}" Content="Use only close distances"></CheckBox>
+
+               
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=VertexGroupSize, StringFormat=Vertex Group Size: {0}}"></TextBlock>
                 <telerik:RadSlider Margin="5,0,0,0" Width="100" Value="{Binding VertexGroupSize}" Orientation="Horizontal" Minimum="10" Maximum="100"></telerik:RadSlider>
                 <TextBlock Margin="5, 0, 2, 0"  Text="{Binding Path=SlopeWeightMultiplier, StringFormat=Slope Weight Multiplier: {0}}"></TextBlock>
@@ -111,7 +114,14 @@
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <CheckBox IsChecked="{Binding IsVisible, Mode=TwoWay}" Margin="2" />
+                                <CheckBox IsChecked="{Binding IsVisible, Mode=TwoWay}" Margin="2">
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="Click">
+                                            <catel:EventToCommand Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=catel:DataWindow}, 
+                                                    Path=ViewModel.ResultsCheckedCommand}" PassEventArgsToCommand="True" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                </CheckBox>
                                 <TextBlock Text="Route" />
                             </StackPanel>
                         </DataTemplate>

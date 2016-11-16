@@ -20,6 +20,7 @@ using Catel.IoC;
 using Catel.Logging;
 using Catel.Messaging;
 using Esri.ArcGISRuntime.Geometry;
+using Esri.ArcGISRuntime.Symbology;
 using IronPython.Hosting;
 
 using Microsoft.Scripting.Hosting;
@@ -43,9 +44,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         public Command LoadGraphCommand { get; private set; }
 
         public Command MinimumSpanningTreeCommand { get; private set; }
-
         public Command ClearHightlightCommand { get; private set; }
-
         public Command QueryMethod { get; private set; }
 
         public Command TspCommand { get; private set; }
@@ -60,6 +59,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         public Command SmoothenCommand { get; set; }
         public Command GoogleTspCommand { get; set; }
         public Command DrawResultCommand { get; set; }
+
+        public Command<object> ResultsCheckedCommand { get; private set; }
 
         public static TSPVertices TspVertexList { get; set; }
         public List<GraphVertexClass> GraphVertexList
@@ -133,7 +134,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         public static readonly PropertyData MaxAllowedSlopeProperty = RegisterProperty("MaxAllowedSlope", typeof(int), 0, MaxAllowedSlopePropertyChangedEventHandler);
 
-      
+
 
 
         public int VertexGroupSize
@@ -235,7 +236,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private static void MaxAllowedSlopePropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
         {
-            MapUtils.Instance.MaxAllowedSlope = (int) e.NewValue;
+            MapUtils.Instance.MaxAllowedSlope = (int)e.NewValue;
         }
 
         public bool UseVisitedEdges
@@ -244,6 +245,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             set { SetValue(UseVisitedEdgesProperty, value); }
         }
         public static readonly PropertyData UseVisitedEdgesProperty = RegisterProperty("UseVisitedEdges", typeof(bool), true, UseVisitedEdgesPropertyChangedEventHandler);
+
+
+        public bool CalculateOnlyNeighbors
+        {
+            get { return GetValue<bool>(CalculateOnlyNeighborsProperty); }
+            set { SetValue(CalculateOnlyNeighborsProperty, value); }
+        }
+
+        public static readonly PropertyData CalculateOnlyNeighborsProperty = RegisterProperty("CalculateOnlyNeighbors", typeof(bool), true);
 
         private static void UseVisitedEdgesPropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
         {
@@ -307,9 +317,24 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             PythonCommand = new Command(OnPythonCommand);
             ShortestPathOnAllCommand = new Command(OnShortestPathOnAllCommand);
             VehicleRoutingCommand = new Command(OnVehicleRoutingCommand);
+            ResultsCheckedCommand = new Command<object>(OnResultsCheckedCommand);
+
         }
 
-       
+        private void OnResultsCheckedCommand(object param)
+        {
+            foreach (var graphic in ResultGraphics)
+            {
+                var correspondingPoints = MapUtils.Instance.TspVerticesLayer.Graphics.Where(o => ((SimpleMarkerSymbol) o.Symbol).Color == ((SimpleLineSymbol) graphic.Symbol).Color);
+                foreach (var point in correspondingPoints)
+                {
+                    point.IsVisible = graphic.IsVisible;
+                }
+            }
+            
+        }
+
+
         private async void OnVehicleRoutingCommand()
         {
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("New routing started!")));
@@ -321,10 +346,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
                 if (UseVisitedEdges)
                 {
-                   var edges = GetEdgesFromKokooajaUrat(startingVertex);
+                    var edges = GetEdgesFromKokooajaUrat(startingVertex);
                     GraphUtils.Instance.KokoajauraList = new List<List<GraphEdgeClass>> { edges.ToList() };
                 }
-
 
                 var root = GraphUtils.Instance.Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(startingVertex.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(startingVertex.Y));
                 List<GraphVertexClass> vertices = null;
@@ -337,11 +361,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                     vertices = GraphVertexList;
                 }
 
-
-                Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("Calculating distances"))); 
+                Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("Calculating distances")));
                 if (UseShortestPaths)
                 {
-                    GraphUtils.Instance.CalculateShortestPaths(vertices, root);
+                    await Task.Run(() => GraphUtils.Instance.CalculateShortestPaths(vertices, root, CalculateOnlyNeighbors));
                 }
                 else
                 {
@@ -358,6 +381,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             else
             {
                 ResultGraphics = MapUtils.Instance.TspGraphicsLayer.Graphics;
+                if (!MapUtils.Instance.Map.Layers.ContainsLayer(MapUtils.Instance.TspGraphicsLayer))
+                {
+                    MapUtils.Instance.Map.Layers.Add(MapUtils.Instance.TspGraphicsLayer);
+                }
+                if (!MapUtils.Instance.Map.Layers.ContainsLayer(MapUtils.Instance.TspVerticesLayer))
+                {
+                    MapUtils.Instance.Map.Layers.Add(MapUtils.Instance.TspVerticesLayer);
+                }
+
                 OnUpdateStatusBar("Vehicle routing success!");
                 CalculateTotalLength();
                 GraphUtils.Instance.ResetVisited();

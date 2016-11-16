@@ -253,8 +253,8 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
             {
                 locations_[index] = new Position(Convert.ToInt32(vertice.X), Convert.ToInt32(vertice.Y));
                 order_demands_[index] = 1;
-                order_time_windows_[index] = new TimeWindow(0, 50000);
-                order_penalties_[index] = 5000;
+                order_time_windows_[index] = new TimeWindow(0, 10000000);
+                order_penalties_[index] = int.MaxValue;
             }
             else
             {
@@ -426,8 +426,6 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
         int demand_max = 3;
         int time_window_max = 24 * 1000;
         int time_window_width = 4 * 2000;
-        int penalty_min = 50000;
-        int penalty_max = 50000;
         int end_time = 24 * 600000;
         int cost_coefficient_max = 3;
 
@@ -475,7 +473,7 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
             var color = MapUtils.Instance.GetRandomColor();
             MapUtils.Instance.GraphicsLayer.ClearSelection();
             MapUtils.Instance.DrawRouteFromOrderList(orderlist.ToArray(), verticeList.ToArray(), useShortestPath, color, StartVertice);
-            MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, false, color);
+            MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, false, color, true);
         }
 
 
