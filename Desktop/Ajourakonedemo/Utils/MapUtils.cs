@@ -1002,7 +1002,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             return result;
         }
 
-        public void DrawRouteFromOrderList(long[] orderList, GraphVertexClass[] vertices, bool useShortestPaths = false, Color color = default(Color), GraphVertexClass startVertice = null)
+        public void DrawRouteFromOrderList(long[] orderList, GraphVertexClass[] vertices, bool useShortestPaths = false, Color color = default(Color))
         {
             //DrawRoutesToStartLocation(orderList, vertices, useShortestPaths, startVertice);
 

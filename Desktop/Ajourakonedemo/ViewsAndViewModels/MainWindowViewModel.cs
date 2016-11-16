@@ -167,6 +167,13 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         }
         public static readonly PropertyData TotalLengthProperty = RegisterProperty("AjouraTotalLength", typeof(double));
 
+        public double KokooajaUraTotalLength
+        {
+            get { return GetValue<double>(KokooajaUraTotalLengthProperty); }
+            set { SetValue(KokooajaUraTotalLengthProperty, value); }
+        }
+        public static readonly PropertyData KokooajaUraTotalLengthProperty = RegisterProperty("KokooajaUraTotalLength", typeof(double));
+
         public double AjouraTotalArea
         {
             get { return GetValue<double>(AjouraTotalAreaProperty); }
@@ -273,7 +280,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             InitialPopulation = 10000;
             TotalGenerations = 210000;
             KokoajauraBufferValue = 175;
-            MaxAllowedSlope = 12;
+            MaxAllowedSlope = 25;
         }
 
         private void InitMessages()
@@ -338,7 +345,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         private async void OnVehicleRoutingCommand()
         {
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("New routing started!")));
-            var success = false;
+          
+            List<GraphVertexClass> vertices = null;
+            GraphVertexClass root = null;
+            var optRun = new OptimizationRunModel();
+            optRun.UseVisitedEdges = UseVisitedEdges;
+            optRun.Capacity = VertexGroupSize;
+            optRun.UseLocalDistances = CalculateOnlyNeighbors;
+            optRun.UseShortestPaths = UseShortestPaths;
+            
             MessageMediator.SendMessage("Set storage location", "NaytaInfoboksiKayttajalle");
             var startingVertex = await MapUtils.Instance.GetPointFromMap();
             if (startingVertex != null)
@@ -350,8 +365,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                     GraphUtils.Instance.KokoajauraList = new List<List<GraphEdgeClass>> { edges.ToList() };
                 }
 
-                var root = GraphUtils.Instance.Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(startingVertex.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(startingVertex.Y));
-                List<GraphVertexClass> vertices = null;
+                root = GraphUtils.Instance.Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(startingVertex.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(startingVertex.Y));
+                optRun.StartVertice = root.ID;
                 if (GraphVertexList == null || GraphVertexList.Count < 4)
                 {
                     vertices = GraphUtils.Instance.Graph.Vertices.ToList();
@@ -372,14 +387,27 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                 }
                 Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("Running routing optimizer")));
 
-                success = CapacitatedVehicleRoutingProblemWithTimeWindows.Start(vertices, VertexGroupSize, UseShortestPaths);
+                optRun.Vertices = vertices;
+                optRun.SlopeMultiplier = SlopeWeightMultiplier;
+                optRun.WetnessMultiplier = WetnessWeightMultiplier;
+                optRun = CapacitatedVehicleRoutingProblemWithTimeWindows.Start(optRun);
+
+
             }
-            if (!success)
+            if (optRun.OrderLists == null || !optRun.OrderLists.Any())
             {
                 OnUpdateStatusBar("Vehicle routing failed!");
             }
             else
             {
+                foreach (var orderlist in optRun.OrderLists)
+                {
+                    var color = MapUtils.Instance.GetRandomColor();
+                    MapUtils.Instance.GraphicsLayer.ClearSelection();
+                    MapUtils.Instance.DrawRouteFromOrderList(orderlist.ToArray(), optRun.Vertices.ToArray(), optRun.UseShortestPaths, color);
+                    MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, false, color, true);
+                }
+
                 ResultGraphics = MapUtils.Instance.TspGraphicsLayer.Graphics;
                 if (!MapUtils.Instance.Map.Layers.ContainsLayer(MapUtils.Instance.TspGraphicsLayer))
                 {
@@ -392,6 +420,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
                 OnUpdateStatusBar("Vehicle routing success!");
                 CalculateTotalLength();
+                optRun.UraTotalLength = AjouraTotalLength;
+                optRun.KokoajauraTotalLength = KokoajauraTotalLength;
+                SqliteUtils.Instance.Insert(optRun);
+
                 GraphUtils.Instance.ResetVisited();
             }
         }

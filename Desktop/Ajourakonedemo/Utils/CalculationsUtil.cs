@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ArcGISRuntime.Samples.DesktopViewer.Model;
-using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
 using Esri.ArcGISRuntime.Geometry;
 using Esri.ArcGISRuntime.Layers;
 

@@ -408,12 +408,13 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
 
 
 
-    public static bool Start(List<GraphVertexClass> vertices, int vertexGroupSize, bool useShortestPath)
+    public static OptimizationRunModel Start(OptimizationRunModel optRun)
     {
+        var vertices = optRun.Vertices;
         if (vertices == null || vertices.Count < 4)
         {
 
-            return false;
+            return optRun;
         }
         StartVertice = vertices.Last();
         vertices.RemoveAt(vertices.Count -1);
@@ -433,7 +434,7 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
 
         int orders = Vertices.Length;
 
-        int capacity = vertexGroupSize;
+        int capacity = optRun.Capacity;
         int vehicles = (orders - 1) / capacity + 1;
 
         var verticeList = new List<GraphVertexClass>();
@@ -463,21 +464,19 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
                            end_time,
                            capacity,
                            cost_coefficient_max);
-        problem.Solve(orders, vehicles, verticeList.ToArray(), useShortestPath);
-
-      
+        problem.Solve(orders, vehicles, verticeList.ToArray(), optRun.UseShortestPaths);
 
 
-        foreach (var orderlist in ListOfOrderLists)
-        {
-            var color = MapUtils.Instance.GetRandomColor();
-            MapUtils.Instance.GraphicsLayer.ClearSelection();
-            MapUtils.Instance.DrawRouteFromOrderList(orderlist.ToArray(), verticeList.ToArray(), useShortestPath, color, StartVertice);
-            MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, false, color, true);
-        }
+        optRun.Vertices = verticeList;
+
+        optRun.OrderLists = ListOfOrderLists;
+        
+        return optRun;
+
+       
 
 
-        return true;
+        
     }
 
     public static GraphVertexClass StartVertice

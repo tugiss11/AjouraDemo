@@ -205,16 +205,20 @@
     <Compile Include="Model\GraphEdgeClass.cs" />
     <Compile Include="Model\GraphVertexClass.cs" />
     <Compile Include="Model\FeatureLayerMenuItem.cs" />
+    <Compile Include="Model\OptimizationRunModel.cs" />
     <Compile Include="SdkInstallNeeded.xaml.cs">
       <DependentUpon>SdkInstallNeeded.xaml</DependentUpon>
     </Compile>
     <Compile Include="Services\MapViewService.cs" />
+    <Compile Include="SQLite\SQLite.cs" />
+    <Compile Include="SQLite\SQLiteAsync.cs" />
     <Compile Include="Utils\CalculationsUtil.cs" />
     <Compile Include="Utils\GoogleTSP\cstsp.cs" />
     <Compile Include="Utils\GoogleVRPTW\Cscvrptw.cs" />
     <Compile Include="Utils\GraphUtils.cs" />
     <Compile Include="Utils\MapUtils.cs" />
     <Compile Include="Utils\SmoothUtil.cs" />
+    <Compile Include="Utils\SqliteUtils.cs" />
     <Compile Include="Utils\TSP2\TspCalcEventArgs.cs" />
     <Compile Include="Utils\TSP2\TSPVertices.cs" />
     <Compile Include="Utils\TSP2\TSPVertice.cs" />
@@ -292,6 +296,9 @@
     <Folder Include="Interfaces\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="sqlite3.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Telerik\EQATEC.Analytics.Monitor.dll" />
     <Content Include="Telerik\SharpDX.D3DCompiler.dll" />
     <Content Include="Telerik\SharpDX.Direct2D1.dll" />
