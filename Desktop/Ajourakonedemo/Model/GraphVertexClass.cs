@@ -9,6 +9,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
         public double? X { get; set; }
         public double? Y { get; set; }
 
+
+        /// <summary>
+        /// Puumäärä dm3
+        /// </summary>
+        public int Puumaara { get; set; }
+
         public GraphVertexClass(int id)
         {
             ID = id;
@@ -19,6 +25,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
             ID = id;
             X = x;
             Y = y;
+            Puumaara = 1;
         }
 
         public override string ToString()

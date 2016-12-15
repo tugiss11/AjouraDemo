@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -9,8 +10,10 @@ using System.Windows.Threading;
 using ArcGISRuntime.Samples.DesktopViewer.Model;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
 using Catel.IoC;
+using Catel.IO;
 using Catel.Logging;
 using Catel.Messaging;
+using Esri.ArcGISRuntime.Controls;
 using Esri.ArcGISRuntime.Data;
 using Esri.ArcGISRuntime.Geometry;
 using Esri.ArcGISRuntime.Layers;
@@ -82,6 +85,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             int counter = 1;
             var g = new GraphClass(false);
 
+
+            
+
             foreach (var feature in features)
             {
                 if (feature.Geometry != null && feature.Geometry.GeometryType == GeometryType.Polyline)
@@ -95,6 +101,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     var startVertex = g.Vertices.FirstOrDefault(o => o.ID == startId);
                     if (startVertex == null)
                     {
+
+                     
                         startVertex = new GraphVertexClass(startId, startPoint.X, startPoint.Y);
                     }
 
@@ -684,7 +692,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                         long distance = edges.Aggregate(0, (current, edge) => current + Convert.ToInt32(edge.Weight));
                         vertice.Neighbours[index] = endVertice.ID;
                         vertice.Distances[index] = distance;
-                        tempList.Add(new ShortestPath {ShortestPathEdges = edges, VertexId1 = startVertice.ID, VertexId2 = endVertice.ID, Distance = distance});
+                        var path = new ShortestPath {ShortestPathEdges = edges, VertexId1 = startVertice.ID, VertexId2 = endVertice.ID, Distance = distance};
+                        tempList.Add(path);
                     }
                     else
                     {
@@ -710,6 +719,34 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 return string.Format("From {0} to {1}. Cost: {2}", VertexId1, VertexId2, Distance);
             }
+        }
+
+        public async Task UpdatePuutToGraphAsync()
+        {
+
+            var nodesLayer = MapUtils.Instance.Map.Layers[Path.GetFileName(ConfigurationManager.AppSettings["Nodes"])] as FeatureLayer;
+
+
+            if (nodesLayer == null)
+                return;
+
+
+            var nodes = (await nodesLayer.FeatureTable.QueryAsync(new QueryFilter() { WhereClause = "1=1" })).ToList();
+            foreach (var vertice in Graph.Vertices)
+            {
+                var node = nodes.FirstOrDefault(o => GeometryEngine.Intersects(o.Geometry, new MapPoint((double)vertice.X,(double)vertice.Y, o.Geometry.SpatialReference)));
+                if (node != null)
+                {
+                    vertice.Puumaara = Convert.ToInt32(Convert.ToDouble(node.Attributes["V"])*1000*0.2);
+                }
+                else
+                {
+                    log.Error("Ei löydy nodea");
+                }
+            }
+
+
+            
         }
     }
 }

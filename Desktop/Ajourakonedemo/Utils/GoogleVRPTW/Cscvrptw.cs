@@ -252,7 +252,7 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
             if (vertice != null)
             {
                 locations_[index] = new Position(Convert.ToInt32(vertice.X), Convert.ToInt32(vertice.Y));
-                order_demands_[index] = 1;
+                order_demands_[index] = vertice.Puumaara;
                 order_time_windows_[index] = new TimeWindow(0, 10000000);
                 order_penalties_[index] = int.MaxValue;
             }
@@ -433,8 +433,10 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
 
         int orders = Vertices.Length;
 
+        var puuSumma = Vertices.Aggregate(0, (current, vertice) => current + vertice.Puumaara);
+
         int capacity = optRun.Capacity;
-        int vehicles = (orders - 1) / capacity + 1;
+        int vehicles = (puuSumma - 1) / capacity + 1;
 
         var verticeList = new List<GraphVertexClass>();
         verticeList.AddRange(Vertices);

@@ -205,6 +205,7 @@
     <Compile Include="Model\GraphEdgeClass.cs" />
     <Compile Include="Model\GraphVertexClass.cs" />
     <Compile Include="Model\FeatureLayerMenuItem.cs" />
+    <Compile Include="Model\RouteModel.cs" />
     <Compile Include="Model\OptimizationRunModel.cs" />
     <Compile Include="SdkInstallNeeded.xaml.cs">
       <DependentUpon>SdkInstallNeeded.xaml</DependentUpon>

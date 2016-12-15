@@ -11,6 +11,7 @@ using System.Windows.Threading;
 using ArcGISRuntime.Samples.DesktopViewer.Model;
 using ArcGISRuntime.Samples.DesktopViewer.Services;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
+using ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels;
 using Catel.IoC;
 using Catel.Logging;
 using Catel.Messaging;
@@ -134,12 +135,18 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 {
                     _tspVerticesLayer = new GraphicsLayer { DisplayName = "Point Graphics" };
                     var labeling = new LabelProperties();
-                    var labelClasses = new AttributeLabelClassCollection { new AttributeLabelClass() { IsVisible = true, TextExpression = "[ID]", LabelPlacement = LabelPlacement.PointAboveCenter, Symbol =  new TextSymbol()
+                    var labelClasses = new AttributeLabelClassCollection
                     {
-                        BorderLineColor = Colors.Black,
-                        BorderLineSize = 0.1,
-                        Font = new SymbolFont() {FontFamily = "Courier New", FontSize = 12, FontStyle =  SymbolFontStyle.Normal}
-                    } } };
+                        new AttributeLabelClass()
+                        {
+                            IsVisible = true, TextExpression = "[ID]", LabelPlacement = LabelPlacement.PointAboveCenter, Symbol = new TextSymbol()
+                            {
+                                BorderLineColor = Colors.Black,
+                                BorderLineSize = 0.1,
+                                Font = new SymbolFont() {FontFamily = "Courier New", FontSize = 12, FontStyle = SymbolFontStyle.Normal}
+                            }
+                        }
+                    };
                     labeling.LabelClasses = labelClasses;
                     _tspVerticesLayer.Labeling = labeling;
                     Map.Layers.Add(TspVerticesLayer);
@@ -151,11 +158,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             set { _tspVerticesLayer = value; }
         }
 
-        public TspEventArgs LatestTspEventArgs
-        {
-            get;
-            set;
-        }
+        public TspEventArgs LatestTspEventArgs { get; set; }
 
         public static MapViewService MapViewService
         {
@@ -169,10 +172,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public Map Map
         {
-            get
-            {
-                return MapViewService.MapView.Map;
-            }
+            get { return MapViewService.MapView.Map; }
         }
 
         public IEnumerable<Graphic> SavedHightlights { get; set; }
@@ -338,7 +338,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
         }
 
-        public async Task LoadArcGisShapefileLayerAsync(string path, string displayname, bool isVisible = true, bool useFeatureLayer = false)
+        public async Task LoadArcGisShapefileLayerAsync(string path, string displayname, bool isVisible = true, bool useFeatureLayer = false, Color color = default(Color))
         {
             try
             {
@@ -356,30 +356,26 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                             IsVisible = isVisible,
                             ID = displayname
                         };
-                        featureLayer.MinScale = 2000;
+                        featureLayer.MinScale = 5000;
 
                         var linesymbol = new SimpleLineSymbol
                         {
-                            Color = GetRandomColor(),
+                            Color = color,
                             Style = SimpleLineStyle.Solid,
                             Width = 3
                         };
-                        var kaikkiFeaturet = await shapeFileTable.QueryAsync(new QueryFilter() {WhereClause = "1=1"});
+                        var kaikkiFeaturet = await shapeFileTable.QueryAsync(new QueryFilter() { WhereClause = "1=1" });
                         foreach (var feature in kaikkiFeaturet)
                         {
                             if (feature.Geometry.GeometryType == GeometryType.Polyline)
                             {
-                                ((GraphicsLayer) featureLayer).Graphics.Add(new Graphic(feature.Geometry, feature.Attributes, linesymbol));
+                                ((GraphicsLayer)featureLayer).Graphics.Add(new Graphic(GeometryEngine.Project(feature.Geometry, Map.SpatialReference), feature.Attributes, linesymbol));
                             }
                             else
                             {
-                                ((GraphicsLayer)featureLayer).Graphics.Add(new Graphic(feature.Geometry, feature.Attributes));
+                                ((GraphicsLayer)featureLayer).Graphics.Add(new Graphic(GeometryEngine.Project(feature.Geometry, Map.SpatialReference), feature.Attributes));
                             }
-
-                       
                         }
-
-
                     }
                     else
                     {
@@ -389,12 +385,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                             IsVisible = isVisible,
                             ID = displayname
                         };
-                        ((FeatureLayer) featureLayer).FeatureTable = shapeFileTable;
+                        ((FeatureLayer)featureLayer).FeatureTable = shapeFileTable;
                     }
                     Map.Layers.Add(featureLayer);
                     await featureLayer.InitializeAsync();
 
-                   
+
                 }
                 else
                 {
@@ -882,14 +878,14 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             Random randonGen = new Random();
             var randomColor =
                 Color.FromArgb(
-                  255,
-                  (byte)randonGen.Next(255),
-                  (byte)randonGen.Next(255),
-                  (byte)randonGen.Next(255));
+                    255,
+                    (byte)randonGen.Next(255),
+                    (byte)randonGen.Next(255),
+                    (byte)randonGen.Next(255));
             return randomColor;
         }
 
-        public void ShowGeneralizedRoutes(IEnumerable<Graphic> graphics, bool generalize, Color color = default(Color), bool smoothen = false)
+        public Geometry ShowGeneralizedRoutes(IEnumerable<Graphic> graphics, bool generalize, Color color = default(Color), bool smoothen = false, int id = 0)
         {
             var symbol = new SimpleLineSymbol
             {
@@ -909,9 +905,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 geometry = SmoothUtils.Instance.SmoothPolyline((Polyline)geometry);
             }
 
-            var graphic = new Graphic(geometry, symbol) {IsVisible = false};
+            var graphic = new Graphic(geometry, new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("ID", id)}, symbol) { IsVisible = false };
 
             TspGraphicsLayer.Graphics.Add(graphic);
+            return geometry;
 
         }
 
@@ -1049,7 +1046,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 var startOrder = orderList[index];
                 var startIndex = vertices[startOrder].ID;
-              
+
 
                 var endOrder = orderList[index + 1];
                 var endPoint = vertices[endOrder].ID;
@@ -1113,7 +1110,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 if (o == null)
                 {
-                    log.Error("Error finding path");
+                    //log.Error("Error finding path");
                     continue;
                 }
                 if ((o.VertexId1 == startIndex && o.VertexId2 == endPoint) || (o.VertexId1 == startIndex && o.VertexId2 == endPoint))
@@ -1133,12 +1130,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 Size = 11,
                 Style = SimpleMarkerStyle.Diamond,
                 Color = color,
-                Outline = new SimpleLineSymbol() { Style = SimpleLineStyle.Solid, Color = Colors.Black, Width = 0.1}
+                Outline = new SimpleLineSymbol() { Style = SimpleLineStyle.Solid, Color = Colors.Black, Width = 0.1 }
 
             };
 
-            TspVerticesLayer.Graphics.Add(new Graphic(new MapPoint((double)startVertex.X, (double)startVertex.Y, new SpatialReference(3067)), new List<KeyValuePair<string, object>>{ new KeyValuePair<string, object>("ID", index)}, symbol));
-            TspVerticesLayer.Graphics.Add(new Graphic(new MapPoint((double)endVertex.X, (double)endVertex.Y, new SpatialReference(3067)), new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("ID", string.Empty) }, symbol));
+            TspVerticesLayer.Graphics.Add(new Graphic(new MapPoint((double)startVertex.X, (double)startVertex.Y, new SpatialReference(3067)), new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("ID", string.Empty) }, symbol));
+            TspVerticesLayer.Graphics.Add(new Graphic(new MapPoint((double)endVertex.X, (double)endVertex.Y, new SpatialReference(3067)), new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("ID", index) }, symbol));
         }
 
         private IEnumerable<GraphEdgeClass> GetGraphEdgeClassesFromIds(long startIndex, long endPoint)
@@ -1155,6 +1152,161 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
             return edges;
 
+        }
+
+        public async Task LineTracingAsync()
+        {
+
+            var displayname = Path.GetFileName(ConfigurationManager.AppSettings["linedata"]);
+
+            var point = await MapView.Editor.RequestPointAsync();
+            var bufferedPoint = GeometryEngine.Buffer(point, 5);
+            var lineLayer = Map.Layers.FirstOrDefault(o => o.DisplayName == displayname) as GraphicsLayer;
+
+            var symbol = new SimpleLineSymbol
+            {
+                Width = 3,
+                Color = Colors.OrangeRed,
+                Style = SimpleLineStyle.Solid
+            };
+            if (lineLayer == null)
+            {
+                return;
+            }
+            try
+            {
+                foreach (var graphic in lineLayer.Graphics)
+                {
+                    graphic.IsVisible = false;
+                }
+
+                var lines = lineLayer.Graphics.Where(o => GeometryEngine.Intersects(o.Geometry, bufferedPoint));
+                foreach (var line in lines)
+                {
+                    line.IsVisible = true;
+                    var polyline = line.Geometry as Polyline;
+                    if (polyline == null) return;
+                    foreach (var part in polyline.Parts)
+                    {
+                        foreach (var lineSegment in part)
+                        {
+                            TspGraphicsLayer.Graphics.Clear();
+
+                            var geo = new PolylineBuilder(new List<IEnumerable<Segment>>(), Map.SpatialReference);
+                            geo.AddPart(new List<Segment>() { lineSegment });
+                            var graphic = new Graphic(geo.ToGeometry(), symbol) { IsSelected = true };
+                            TspGraphicsLayer.Graphics.Add(graphic);
+
+
+                            var vm = new NotificationViewModel();
+                            vm.ShowModalessDialog(vm, typeof(NotificationView));
+                            while (vm.NotifyViewModelResult == NotificationViewModel.NotifyResult.Wait)
+                            {
+                                await Task.Delay(200);
+                            }
+
+                            if (vm.NotifyViewModelResult == NotificationViewModel.NotifyResult.NextLine)
+                            {
+                                break;
+                            }
+                            else if (vm.NotifyViewModelResult == NotificationViewModel.NotifyResult.Close)
+                            {
+                                return;
+                            }
+                        }
+                    }
+                    line.IsSelected = false;
+                    line.IsVisible = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex);
+
+            }
+            finally
+            {
+                foreach (var graphic in lineLayer.Graphics)
+                {
+                    graphic.IsVisible = true;
+                    graphic.IsSelected = false;
+                }
+            }
+
+
+
+        }
+
+        public async Task GetRoutesAsync()
+        {
+
+            var displayname = Path.GetFileName(ConfigurationManager.AppSettings["linedata"]);
+            TspGraphicsLayer.Graphics.Clear();
+            var geometry = await MapView.Editor.RequestShapeAsync(DrawShape.Polygon);
+            var lineLayer = Map.Layers.FirstOrDefault(o => o.DisplayName == displayname) as GraphicsLayer;
+            if (lineLayer == null) return;
+
+            var symbol = new SimpleLineSymbol
+            {
+                Width = 3,
+                Color = Colors.DarkTurquoise,
+                Style = SimpleLineStyle.Solid
+            };
+
+
+
+            var lines = lineLayer.Graphics.Where(o => GeometryEngine.Intersects(o.Geometry, geometry));
+
+            foreach (var line in lines)
+            {
+
+                var polyline = line.Geometry as Polyline;
+                if (polyline == null) return;
+                foreach (var part in polyline.Parts)
+                {
+                    var geo = new PolylineBuilder(new List<IEnumerable<Segment>>(), Map.SpatialReference);
+                    foreach (var lineSegment in part)
+                    {
+                        if (!GeometryEngine.Intersects(lineSegment.EndPoint, geometry))
+                        {
+                            geo.AddPart(new List<Segment>() { lineSegment });
+                        }
+                        else
+                        {
+                            if (geo.Parts.Count > 3)
+                            {
+                                var graphic = new Graphic(geo.ToGeometry(), symbol) { IsVisible = false };
+                                TspGraphicsLayer.Graphics.Add(graphic);
+                                geo = new PolylineBuilder(new List<IEnumerable<Segment>>(), Map.SpatialReference);
+                            }
+                            else
+                            {
+                                geo = new PolylineBuilder(new List<IEnumerable<Segment>>(), Map.SpatialReference);
+                            }
+                        }
+                    }
+                    if (geo.Parts.Count > 3)
+                    {
+                        var graphic = new Graphic(geo.ToGeometry(), symbol) { IsVisible = false };
+                        TspGraphicsLayer.Graphics.Add(graphic);
+                    }
+                }
+            }
+        }
+
+        public async Task LoadRuntimeContentLayerAsync(string tpkPath4, string getFileName)
+        {
+            var geodaabase = await Geodatabase.OpenAsync(tpkPath4);
+            foreach (var table in geodaabase.FeatureTables)
+            {
+                var fl = new FeatureLayer
+                {
+                    DisplayName = table.Name,
+                    FeatureTable = table
+                };
+                await fl.InitializeAsync();
+                Map.Layers.Add(fl);
+            }
         }
     }
 }

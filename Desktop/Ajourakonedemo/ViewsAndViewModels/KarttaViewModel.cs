@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using ArcGISRuntime.Samples.DesktopViewer.Services;
 using ArcGISRuntime.Samples.DesktopViewer.Utils;
 using Catel.Data;
@@ -144,13 +145,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             Mediator.SendMessage("Loading layers...", "UpdateStatusBar");
             Map.Layers.Clear();
 
-           
-
-
+            string kuviorajatPath = ConfigurationManager.AppSettings["kuviot"];
+            await MapUtils.Instance.LoadKuvioRajatFeatureTableAsync(kuviorajatPath);
 
             //string basemapUri = ConfigurationManager.AppSettings["basemapUri"];
             //await MapUtils.Instance.LoadBasemapAsync(basemapUri, "Taustakartta");
-
 
             string tpkPath2 = ConfigurationManager.AppSettings["wetness"];
             await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath2, Path.GetFileName(tpkPath2), false);
@@ -160,28 +159,23 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             await MapUtils.Instance.LoadWmsLayerAsync(wmsPath, "Taustakartta", string.Empty, false);
 
             string tpkPath = ConfigurationManager.AppSettings["countours"];
-            await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath, Path.GetFileName(tpkPath));
-
+            await MapUtils.Instance.LoadRuntimeContentLayerAsync(tpkPath, Path.GetFileName(tpkPath));
 
           
             string tpkPath4 = ConfigurationManager.AppSettings["borders"];
-            await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath4, Path.GetFileName(tpkPath4));
+            await MapUtils.Instance.LoadRuntimeContentLayerAsync(tpkPath4, Path.GetFileName(tpkPath4));
 
             string tpkPath3 = ConfigurationManager.AppSettings["linedata"];
             // await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath3, Path.GetFileName(tpkPath3), false);
-            await MapUtils.Instance.LoadArcGisShapefileLayerAsync(tpkPath3, Path.GetFileName(tpkPath3), false);
-
-
-
-
+            await MapUtils.Instance.LoadArcGisShapefileLayerAsync(tpkPath3, Path.GetFileName(tpkPath3), false, false, Colors.MediumVioletRed);
+     
             string path = ConfigurationManager.AppSettings["Edges"];
             await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path, Path.GetFileName(path), true, true);
 
             string nodesPath = ConfigurationManager.AppSettings["Nodes"];
             await MapUtils.Instance.LoadArcGisShapefileLayerAsync(nodesPath, Path.GetFileName(nodesPath), true, true);
 
-            string kuviorajatPath = ConfigurationManager.AppSettings["kuviot"];
-            await MapUtils.Instance.LoadKuvioRajatFeatureTableAsync(kuviorajatPath);
+           
             //string path2 = ConfigurationManager.AppSettings["HexPath"];
             //await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path2, "Hex");
 
@@ -194,13 +188,14 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private void InitializeMap()
         {
-            Map = new Map
+            var sr = SpatialReference.Create(3067);
+            var map = new Map
             {
-                SpatialReference = SpatialReference.Create(3067),
-                InitialViewpoint =
-                    new ViewpointExtent(new Envelope(46167.837979319, 6629395.36843484, 762231.492641991,
-                        7810900.49878568))
+                SpatialReference = sr,
+                InitialViewpoint = new ViewpointExtent(new Envelope(46167.837979319, 6629395.36843484, 762231.492641991,
+                        7810900.49878568, sr))
             };
+            Map = map;
 
             var viewModelManager = (IViewModelManager)Catel.IoC.ServiceLocator.Default.ResolveType(typeof(IViewModelManager));
             var viewModel = (MainWindowViewModel)viewModelManager.ActiveViewModels.FirstOrDefault(vm => vm is MainWindowViewModel);

@@ -20,6 +20,7 @@ using Catel.Collections;
 using Catel.IoC;
 using Catel.Logging;
 using Catel.Messaging;
+using Esri.ArcGISRuntime.Controls;
 using Esri.ArcGISRuntime.Geometry;
 using Esri.ArcGISRuntime.Symbology;
 using IronPython.Hosting;
@@ -35,6 +36,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         public Command UpdateMenuCommand { get; private set; }
 
         public Command ShortestPathOnAllCommand { get; private set; }
+
+        public Command TraceLineCommand { get; set; }
+
+        public Command GetRoutesCommand { get; set; }
+
 
         public Command LoadLayersCommand { get; private set; }
 
@@ -68,11 +74,13 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         public Command<object> ResultsCheckedCommand { get; private set; }
 
         public static TSPVertices TspVertexList { get; set; }
+
         public List<GraphVertexClass> GraphVertexList
         {
             get { return GetValue<List<GraphVertexClass>>(GraphVertexListProperty); }
             set { SetValue(GraphVertexListProperty, value); }
         }
+
         public static readonly PropertyData GraphVertexListProperty = RegisterProperty("GraphVertexList", typeof(List<GraphVertexClass>));
 
         public FastObservableCollection<OptimizationRunModel> Optimizations
@@ -80,7 +88,52 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<FastObservableCollection<OptimizationRunModel>>(OptimizationsProperty); }
             set { SetValue(OptimizationsProperty, value); }
         }
+
         public static readonly PropertyData OptimizationsProperty = RegisterProperty("Optimizations", typeof(FastObservableCollection<OptimizationRunModel>));
+
+        public FastObservableCollection<RouteModel> Routes
+        {
+            get { return GetValue<FastObservableCollection<RouteModel>>(RoutesProperty); }
+            set { SetValue(RoutesProperty, value); }
+        }
+
+        public static readonly PropertyData RoutesProperty = RegisterProperty("Routes", typeof(FastObservableCollection<RouteModel>));
+
+        public RouteModel ValittuRoute
+        {
+            get { return GetValue<RouteModel>(ValittuRouteProperty); }
+            set { SetValue(ValittuRouteProperty, value); }
+        }
+
+        public static readonly PropertyData ValittuRouteProperty = RegisterProperty("ValittuRoute", typeof(RouteModel));
+
+        public Graphic SelectedResult
+        {
+            get { return GetValue<Graphic>(SelectedResultProperty); }
+            set
+            {
+                SetValue(SelectedResultProperty, value);
+                if (value != null)
+                {
+                    foreach (var graphic in ResultGraphics)
+                    {
+                        graphic.IsVisible = false;
+                    }
+                    value.IsVisible = true;
+                    ValittuRoute = Routes.FirstOrDefault(o => o.Id == Convert.ToInt32(value.Attributes["ID"]));
+                }
+                else
+                {
+                    foreach (var graphic in ResultGraphics)
+                    {
+                        graphic.IsVisible = true;
+                    }
+                }
+            }
+        }
+
+        public static readonly PropertyData SelectedResultProperty = RegisterProperty("SelectedResult", typeof(Graphic));
+
 
 
 
@@ -89,6 +142,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<List<Tuple<int, int>>>(TourPathsProperty); }
             set { SetValue(TourPathsProperty, value); }
         }
+
         public static readonly PropertyData TourPathsProperty = RegisterProperty("TourPaths", typeof(List<Tuple<int, int>>));
 
         public TspEventArgs SelectedEvent
@@ -101,6 +155,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                 SelectedEventPropertyChangedEventHandler(value);
             }
         }
+
         public static readonly PropertyData SelectedEventProperty = RegisterProperty("SelectedEvent", typeof(TspEventArgs), null);
 
 
@@ -109,6 +164,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<List<TspEventArgs>>(EventListProperty); }
             set { SetValue(EventListProperty, value); }
         }
+
         public static readonly PropertyData EventListProperty = RegisterProperty("EventList", typeof(List<TspEventArgs>));
 
         public Tuple<int, int> SelectedPath
@@ -116,6 +172,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<Tuple<int, int>>(SelectedPathProperty); }
             set { SetValue(SelectedPathProperty, value); }
         }
+
         public static readonly PropertyData SelectedPathProperty = RegisterProperty("SelectedPath", typeof(Tuple<int, int>), null, SelectedPathPropertyChangedEventHandler);
 
         public LayerCollection Layers
@@ -123,6 +180,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<LayerCollection>(LayersProperty); }
             set { SetValue(LayersProperty, value); }
         }
+
         public static readonly PropertyData LayersProperty = RegisterProperty("Layers", typeof(LayerCollection));
 
         public string MainWindowStatusBarText
@@ -130,6 +188,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<string>(MainWindowStatusBarTextProperty); }
             set { SetValue(MainWindowStatusBarTextProperty, value); }
         }
+
         public static readonly PropertyData MainWindowStatusBarTextProperty = RegisterProperty("MainWindowStatusBarText", typeof(string));
 
         public int InitialPopulation
@@ -157,7 +216,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             set { SetValue(VertexGroupSizeProperty, value); }
         }
 
-        public static readonly PropertyData VertexGroupSizeProperty = RegisterProperty("VertexGroupSize", typeof(int), 10);
+        public static readonly PropertyData VertexGroupSizeProperty = RegisterProperty("VertexGroupSize", typeof(int), 10000);
 
 
         public int KokoajauraBufferValue
@@ -165,6 +224,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<int>(KokoajauraBufferValueProperty); }
             set { SetValue(KokoajauraBufferValueProperty, value); }
         }
+
         public static readonly PropertyData KokoajauraBufferValueProperty = RegisterProperty("KokoajauraBufferValue", typeof(int));
 
         public int TotalGenerations
@@ -172,6 +232,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<int>(TotalGenerationsProperty); }
             set { SetValue(TotalGenerationsProperty, value); }
         }
+
         public static readonly PropertyData TotalGenerationsProperty = RegisterProperty("TotalGenerations", typeof(int));
 
         public double AjouraTotalLength
@@ -179,6 +240,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<double>(TotalLengthProperty); }
             set { SetValue(TotalLengthProperty, value); }
         }
+
         public static readonly PropertyData TotalLengthProperty = RegisterProperty("AjouraTotalLength", typeof(double));
 
         public double KokooajaUraTotalLength
@@ -186,6 +248,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<double>(KokooajaUraTotalLengthProperty); }
             set { SetValue(KokooajaUraTotalLengthProperty, value); }
         }
+
         public static readonly PropertyData KokooajaUraTotalLengthProperty = RegisterProperty("KokooajaUraTotalLength", typeof(double));
 
         public double AjouraTotalArea
@@ -193,6 +256,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<double>(AjouraTotalAreaProperty); }
             set { SetValue(AjouraTotalAreaProperty, value); }
         }
+
         public static readonly PropertyData AjouraTotalAreaProperty = RegisterProperty("AjouraTotalArea", typeof(double));
 
         public double OldTotalLength
@@ -200,6 +264,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<double>(OldTotalLengthProperty); }
             set { SetValue(OldTotalLengthProperty, value); }
         }
+
         public static readonly PropertyData OldTotalLengthProperty = RegisterProperty("OldTotalLength", typeof(double));
 
         public double KokoajauraTotalLength
@@ -207,6 +272,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<double>(KokoajauraTotalLengthProperty); }
             set { SetValue(KokoajauraTotalLengthProperty, value); }
         }
+
         public static readonly PropertyData KokoajauraTotalLengthProperty = RegisterProperty("KokoajauraTotalLength", typeof(double));
 
         public double KokoajauraTotalArea
@@ -214,6 +280,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<double>(KokoajauraTotalAreaProperty); }
             set { SetValue(KokoajauraTotalAreaProperty, value); }
         }
+
         public static readonly PropertyData KokoajauraTotalAreaProperty = RegisterProperty("KokoajauraTotalArea", typeof(double));
 
         public bool UseShortestPaths
@@ -221,6 +288,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<bool>(UseShortestPathsProperty); }
             set { SetValue(UseShortestPathsProperty, value); }
         }
+
         public static readonly PropertyData UseShortestPathsProperty = RegisterProperty("UseShortestPaths", typeof(bool), true);
 
 
@@ -229,6 +297,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<int>(ScaleProperty); }
             set { SetValue(ScaleProperty, value); }
         }
+
         public static readonly PropertyData ScaleProperty = RegisterProperty("Scale", typeof(int), 100000, ScalePropertyChangedEventHandler);
 
         public int WetnessWeightMultiplier
@@ -236,6 +305,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<int>(WetnessWeightMultiplierProperty); }
             set { SetValue(WetnessWeightMultiplierProperty, value); }
         }
+
         public static readonly PropertyData WetnessWeightMultiplierProperty = RegisterProperty("WetnessWeightMultiplier", typeof(int), 0, WetnessWeightMultiplierPropertyChangedEventHandler);
 
         public int SlopeWeightMultiplier
@@ -243,21 +313,22 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<int>(SlopeWeightMultiplierProperty); }
             set { SetValue(SlopeWeightMultiplierProperty, value); }
         }
+
         public static readonly PropertyData SlopeWeightMultiplierProperty = RegisterProperty("SlopeWeightMultiplier", typeof(int), 0, SlopeWeightMultiplierPropertyChangedEventHandler);
 
         private static void SlopeWeightMultiplierPropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
         {
-            GraphUtils.Instance.SlopeWeightMultiplier = (int)e.NewValue;
+            GraphUtils.Instance.SlopeWeightMultiplier = (int) e.NewValue;
         }
 
         private static void WetnessWeightMultiplierPropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
         {
-            GraphUtils.Instance.WetnessWeightMultiplier = (int)e.NewValue;
+            GraphUtils.Instance.WetnessWeightMultiplier = (int) e.NewValue;
         }
 
         private static void MaxAllowedSlopePropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
         {
-            MapUtils.Instance.MaxAllowedSlope = (int)e.NewValue;
+            MapUtils.Instance.MaxAllowedSlope = (int) e.NewValue;
         }
 
         public bool UseVisitedEdges
@@ -265,6 +336,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             get { return GetValue<bool>(UseVisitedEdgesProperty); }
             set { SetValue(UseVisitedEdgesProperty, value); }
         }
+
         public static readonly PropertyData UseVisitedEdgesProperty = RegisterProperty("UseVisitedEdges", typeof(bool), true, UseVisitedEdgesPropertyChangedEventHandler);
 
 
@@ -278,7 +350,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private static void UseVisitedEdgesPropertyChangedEventHandler(object sender, AdvancedPropertyChangedEventArgs e)
         {
-            GraphUtils.Instance.UseVisitedEdges = (bool)e.NewValue;
+            GraphUtils.Instance.UseVisitedEdges = (bool) e.NewValue;
         }
 
         public static bool IsLoaded { get; set; }
@@ -341,7 +413,35 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             ResultsCheckedCommand = new Command<object>(OnResultsCheckedCommand);
             AddOptimizationModelCommand = new Command(OnAddOptimizationModelCommand);
             RunAllCommand = new Command(OnRunAllCommand);
+            TraceLineCommand = new Command(OnTraceLineCommand);
+            GetRoutesCommand = new Command(OnGetRoutesCommand);
 
+        }
+
+        private async void OnGetRoutesCommand()
+        {
+            try
+            {
+                await MapUtils.Instance.GetRoutesAsync();
+                ResultGraphics = MapUtils.Instance.TspGraphicsLayer.Graphics;
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex);
+            }
+        }
+
+        private async void OnTraceLineCommand()
+        {
+            try
+            {
+                await MapUtils.Instance.LineTracingAsync(); 
+            }
+            catch (Exception ex)
+            {
+               log.Error(ex);
+            }
+          
         }
 
         private async void OnRunAllCommand()
@@ -446,12 +546,17 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             }
             else
             {
+                Routes = new FastObservableCollection<RouteModel>();
+                var id = 1;
                 foreach (var orderlist in optRun.OrderLists)
                 {
                     var color = MapUtils.Instance.GetRandomColor();
                     MapUtils.Instance.GraphicsLayer.ClearSelection();
                     MapUtils.Instance.DrawRouteFromOrderList(orderlist.ToArray(), optRun.Vertices.ToArray(), optRun.UseShortestPaths, color);
-                    MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, false, color, true);
+                    var geo = MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, false, color, true, id);
+                    CalculateRouteDetails(orderlist, id, geo, optRun.Vertices.ToArray());
+                    id++;
+
                 }
 
                 ResultGraphics = MapUtils.Instance.TspGraphicsLayer.Graphics;
@@ -472,6 +577,25 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
                 GraphUtils.Instance.ResetVisited();
             }
+        }
+
+        private void CalculateRouteDetails(List<long> orderlist, int id, Geometry geo, GraphVertexClass[] vertices)
+        {
+            var puumaara = 0;
+            var route = new RouteModel
+            {
+                Id = id,
+                Geometry = geo,
+                Pituus = Math.Round(Math.Abs(GeometryEngine.Length(geo)), 1)
+            };
+            foreach (var order in orderlist)
+            {
+                var vertex = vertices[order];
+                puumaara = vertex.Puumaara + puumaara;
+            }
+            route.Puumaaraa = puumaara;
+
+            Routes.Add(route);
         }
 
         private async Task<OptimizationRunModel> StartOptRun(OptimizationRunModel optRun)
@@ -497,6 +621,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             }
             return optRun;
         }
+
+     
 
         private async Task<OptimizationRunModel> InitOptRun()
         {
@@ -999,6 +1125,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             await MapUtils.Instance.AddFeatureLayersAsGraphic();
             GraphUtils.Instance.AddFeatureLayersToGraph();
             Layers = MapUtils.MapViewService.Map.Layers;
+            await GraphUtils.Instance.UpdatePuutToGraphAsync();
 
         }
 
