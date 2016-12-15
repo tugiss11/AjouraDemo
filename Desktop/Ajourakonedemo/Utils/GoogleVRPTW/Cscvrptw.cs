@@ -408,12 +408,11 @@ public class CapacitatedVehicleRoutingProblemWithTimeWindows
 
 
 
-    public static OptimizationRunModel Start(OptimizationRunModel optRun)
+    public OptimizationRunModel Start(OptimizationRunModel optRun)
     {
         var vertices = optRun.Vertices;
         if (vertices == null || vertices.Count < 4)
         {
-
             return optRun;
         }
         StartVertice = vertices.Last();

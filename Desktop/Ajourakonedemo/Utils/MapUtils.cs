@@ -338,34 +338,63 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
         }
 
-        public async Task LoadArcGisShapefileLayerAsync(string path, string displayname, bool isVisible = true)
+        public async Task LoadArcGisShapefileLayerAsync(string path, string displayname, bool isVisible = true, bool useFeatureLayer = false)
         {
             try
             {
                 if (File.Exists(path))
                 {
                     ShapefileTable shapeFileTable = await ShapefileTable.OpenAsync(path);
-                    FeatureLayer featureLayer = new FeatureLayer(shapeFileTable)
-                    {
-                        DisplayName = displayname,
-                        IsVisible = isVisible,
-                        ID = displayname
-                    };
-                    if (shapeFileTable.GeometryType == GeometryType.Polygon)
-                    {
-                        featureLayer.Renderer = new SimpleRenderer() { Symbol = _simpleFillSymbol };
-                    }
-                    else if (shapeFileTable.GeometryType == GeometryType.Polyline)
-                    {
-                        featureLayer.Renderer = new SimpleRenderer() { Symbol = _simpleLineSymbol };
-                    }
-                    await featureLayer.InitializeAsync();
-                    featureLayer.MinScale = 0;
-                    featureLayer.MaxScale = 0;
+                    Layer featureLayer;
 
+                    if (!useFeatureLayer)
+                    {
+
+                        featureLayer = new GraphicsLayer()
+                        {
+                            DisplayName = displayname,
+                            IsVisible = isVisible,
+                            ID = displayname
+                        };
+                        featureLayer.MinScale = 2000;
+
+                        var linesymbol = new SimpleLineSymbol
+                        {
+                            Color = GetRandomColor(),
+                            Style = SimpleLineStyle.Solid,
+                            Width = 3
+                        };
+                        var kaikkiFeaturet = await shapeFileTable.QueryAsync(new QueryFilter() {WhereClause = "1=1"});
+                        foreach (var feature in kaikkiFeaturet)
+                        {
+                            if (feature.Geometry.GeometryType == GeometryType.Polyline)
+                            {
+                                ((GraphicsLayer) featureLayer).Graphics.Add(new Graphic(feature.Geometry, feature.Attributes, linesymbol));
+                            }
+                            else
+                            {
+                                ((GraphicsLayer)featureLayer).Graphics.Add(new Graphic(feature.Geometry, feature.Attributes));
+                            }
+
+                       
+                        }
+
+
+                    }
+                    else
+                    {
+                        featureLayer = new FeatureLayer()
+                        {
+                            DisplayName = displayname,
+                            IsVisible = isVisible,
+                            ID = displayname
+                        };
+                        ((FeatureLayer) featureLayer).FeatureTable = shapeFileTable;
+                    }
                     Map.Layers.Add(featureLayer);
+                    await featureLayer.InitializeAsync();
 
-                    UpdateMenu(featureLayer);
+                   
                 }
                 else
                 {
@@ -383,7 +412,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public async Task AddFeatureLayersAsGraphic()
         {
-            _mes.SendMessage("Adding graphics...", "UpdateStatusBar");
+            MessageMediator.SendMessage("Adding graphics...", "UpdateStatusBar");
             if (GraphicsLayer == null)
             {
                 GraphicsLayer = new GraphicsLayer();
@@ -405,6 +434,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
 
             GraphicsLayer.Renderer = CreateClassBreakRenderer();
+
+
+
             var featurelayer = Map.Layers[Path.GetFileName(ConfigurationManager.AppSettings["Edges"])] as FeatureLayer;
             if (featurelayer == null)
             {
@@ -417,10 +449,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
 
                 var geometry = feature.Geometry;
-                if (!CheckIfPointsAreInsideKuvio(geometry))
-                {
-                    continue;
-                }
+                //if (!CheckIfPointsAreInsideKuvio(geometry))
+                //{
+                //    continue;
+                //}
 
                 var kaltevuus = Math.Abs(Convert.ToDouble(feature.Attributes[sivukaltString]));
 
@@ -458,7 +490,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
 
 
-                _mes.SendMessage("Adding graphics done", "UpdateStatusBar");
+                MessageMediator.SendMessage("Adding graphics done", "UpdateStatusBar");
             }
         }
 
@@ -478,23 +510,30 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         private Renderer CreateClassBreakRenderer()
         {
             ClassBreaksRenderer renderer = new ClassBreaksRenderer();
-            renderer.Field = kulkukelpoisuusString;
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.Green, 1, 1));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, 2, 2));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, 3, 3));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, 4, 4));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, 5, 5));
-
-
+            //renderer.Field = kulkukelpoisuusString;
             //renderer.Infos.Add(CreateClassBreakInfo(Colors.Green, 1, 1));
-            //renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, -13, -10));
-            //renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, 10, 13));
-            //renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, -6, -2));
-            //renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, 2, 6));
-            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, -10, -6));
-            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, 6, 10));
-            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, 13, 50));
-            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, -50, -13));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, 2, 2));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, 3, 3));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, 4, 4));
+            //renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, 5, 5));
+
+            renderer.Field = sivukaltString;
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.Green, 1, 1));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, -13, -10));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, 10, 13));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, -6, -2));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, 2, 6));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, -10, -6));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, 6, 10));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, 13, 50));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, -50, -13));
+
+            renderer.DefaultSymbol = new SimpleLineSymbol
+            {
+                Color = GetRandomColor(),
+                Style = SimpleLineStyle.Solid,
+                Width = 3
+            };
             return renderer;
 
 

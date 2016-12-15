@@ -58,6 +58,7 @@
                 <telerik:RadMenuItem Header="Minimum Spanning Tree" Command="{Binding MinimumSpanningTreeCommand}"/>
                 <telerik:RadMenuItem Header="Shortest Path" Command="{Binding ShortestPathCommand}"/> -->
                 <telerik:RadMenuItem Header="Add vertices to route" Command="{Binding SetTspNodesCommand}"/>
+                <telerik:RadMenuItem Header="Add optimization model" Command="{Binding AddOptimizationModelCommand}"/>
                 <telerik:RadMenuItem Header="Vehicle Routing" Command="{Binding VehicleRoutingCommand}"/>
                 <telerik:RadMenuItem Header="TSP on Selected" Command="{Binding TspCommand}"/>
                 <telerik:RadMenuItem Header="TSP on All" Command="{Binding TspOnAllCommand}"/>
@@ -127,6 +128,20 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
+
+                <TextBlock Margin="5, 0, 2, 0" Text="Optimization Runs:"></TextBlock>
+                <ListView Margin="3" MinHeight="50"  ItemsSource="{Binding Optimizations}" Background="Transparent">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding}" />
+                                <TextBlock Text="{Binding ID}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <telerik:RadMenuItem Header="Run All" Command="{Binding RunAllCommand}"/>
 
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=AjouraTotalLength, StringFormat=Ajoura m2: {0}}"></TextBlock>
                 <TextBlock Margin="5, 0, 2, 0" Text="{Binding Path=AjouraTotalArea, StringFormat=Ajoura m2: {0}}"></TextBlock>

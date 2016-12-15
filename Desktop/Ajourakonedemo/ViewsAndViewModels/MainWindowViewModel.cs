@@ -16,6 +16,7 @@ using ArcGISRuntime.Samples.DesktopViewer.Utils;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.GoogleTSP;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
 using Catel;
+using Catel.Collections;
 using Catel.IoC;
 using Catel.Logging;
 using Catel.Messaging;
@@ -39,6 +40,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         public Command ShortestPathCommand { get; private set; }
 
+        public Command RunAllCommand { get; private set; }
+
         public Command PythonCommand { get; private set; }
 
         public Command LoadGraphCommand { get; private set; }
@@ -50,6 +53,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         public Command TspCommand { get; private set; }
 
         public Command SetTspNodesCommand { get; set; }
+
+        public Command AddOptimizationModelCommand { get; set; }
 
         public Command ToggleGraphicsCommand { get; set; }
 
@@ -69,6 +74,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             set { SetValue(GraphVertexListProperty, value); }
         }
         public static readonly PropertyData GraphVertexListProperty = RegisterProperty("GraphVertexList", typeof(List<GraphVertexClass>));
+
+        public FastObservableCollection<OptimizationRunModel> Optimizations
+        {
+            get { return GetValue<FastObservableCollection<OptimizationRunModel>>(OptimizationsProperty); }
+            set { SetValue(OptimizationsProperty, value); }
+        }
+        public static readonly PropertyData OptimizationsProperty = RegisterProperty("Optimizations", typeof(FastObservableCollection<OptimizationRunModel>));
+
+
 
         public List<Tuple<int, int>> TourPaths
         {
@@ -325,75 +339,107 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             ShortestPathOnAllCommand = new Command(OnShortestPathOnAllCommand);
             VehicleRoutingCommand = new Command(OnVehicleRoutingCommand);
             ResultsCheckedCommand = new Command<object>(OnResultsCheckedCommand);
+            AddOptimizationModelCommand = new Command(OnAddOptimizationModelCommand);
+            RunAllCommand = new Command(OnRunAllCommand);
 
         }
 
+        private async void OnRunAllCommand()
+        {
+            var taskList = new List<Task<OptimizationRunModel>>();
+            foreach (var optRun in Optimizations)
+            {
+                var task = Task.Run(() => StartOptRunAndCalculations(optRun));
+                taskList.Add(task);
+            }
+
+            var resultList = await Task.WhenAll(taskList);
+            OptimizationRunModel smallest = null;
+            foreach (var result in resultList)
+            {
+                if (smallest == null || result.UraTotalLength < smallest.UraTotalLength)
+                {
+                    smallest = result;
+                }
+            }
+
+        }
+
+        private async Task<OptimizationRunModel> StartOptRunAndCalculations(OptimizationRunModel optRun)
+        {
+            optRun = await StartOptRun(optRun);
+            return optRun;
+        }
+
+        private async void OnAddOptimizationModelCommand()
+        {
+
+
+
+            if (Optimizations == null)
+            {
+                Optimizations = new FastObservableCollection<OptimizationRunModel>();
+            }
+            Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("Adding new optimization run...")));
+
+            var optRun = await InitOptRun();
+            if (optRun.StartVertice > 0)
+            {
+                Optimizations.Add(optRun);
+                Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("Added new optimization run")));
+            }
+            else
+            {
+                Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("Failed adding new optimization run")));
+            }
+
+
+        }
+
+
+
+
         private void OnResultsCheckedCommand(object param)
         {
+            var pointList = new List<Graphic>();
             foreach (var graphic in ResultGraphics)
             {
-                var correspondingPoints = MapUtils.Instance.TspVerticesLayer.Graphics.Where(o => ((SimpleMarkerSymbol) o.Symbol).Color == ((SimpleLineSymbol) graphic.Symbol).Color);
+                var correspondingPoints = MapUtils.Instance.TspVerticesLayer.Graphics.Where(o => ((SimpleMarkerSymbol)o.Symbol).Color == ((SimpleLineSymbol)graphic.Symbol).Color);
                 foreach (var point in correspondingPoints)
                 {
                     point.IsVisible = graphic.IsVisible;
+                    pointList.Add(point);
                 }
             }
-            
+
+            GetDetailsFromPointList(pointList);
+
+        }
+
+        private void GetDetailsFromPointList(List<Graphic> pointList)
+        {
+
+            for (int index = 0; index < pointList.Count; ++index)
+            {
+                
+            }
+            //Maksimikuorma 95000 dm3
+            //Matka
+            //Ajotyhjänä
+            //Ajoaika
+            //Ajotäydellä
+
         }
 
 
         private async void OnVehicleRoutingCommand()
         {
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("New routing started!")));
-          
-            List<GraphVertexClass> vertices = null;
-            GraphVertexClass root = null;
-            var optRun = new OptimizationRunModel();
-            optRun.UseVisitedEdges = UseVisitedEdges;
-            optRun.Capacity = VertexGroupSize;
-            optRun.UseLocalDistances = CalculateOnlyNeighbors;
-            optRun.UseShortestPaths = UseShortestPaths;
-            
-            MessageMediator.SendMessage("Set storage location", "NaytaInfoboksiKayttajalle");
-            var startingVertex = await MapUtils.Instance.GetPointFromMap();
-            if (startingVertex != null)
-            {
 
-                if (UseVisitedEdges)
-                {
-                    var edges = GetEdgesFromKokooajaUrat(startingVertex);
-                    GraphUtils.Instance.KokoajauraList = new List<List<GraphEdgeClass>> { edges.ToList() };
-                }
+            var optRun = await InitOptRun();
 
-                root = GraphUtils.Instance.Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(startingVertex.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(startingVertex.Y));
-                optRun.StartVertice = root.ID;
-                if (GraphVertexList == null || GraphVertexList.Count < 4)
-                {
-                    vertices = GraphUtils.Instance.Graph.Vertices.ToList();
-                }
-                else
-                {
-                    vertices = GraphVertexList;
-                }
+            await StartOptRun(optRun);
 
-                Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("Calculating distances")));
-                if (UseShortestPaths)
-                {
-                    await Task.Run(() => GraphUtils.Instance.CalculateShortestPaths(vertices, root, CalculateOnlyNeighbors));
-                }
-                else
-                {
-                    vertices.Add(root);
-                }
-                Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("Running routing optimizer")));
-
-                optRun.Vertices = vertices;
-                optRun.SlopeMultiplier = SlopeWeightMultiplier;
-                optRun.WetnessMultiplier = WetnessWeightMultiplier;
-                optRun = CapacitatedVehicleRoutingProblemWithTimeWindows.Start(optRun);
-
-
-            }
             if (optRun.OrderLists == null || !optRun.OrderLists.Any())
             {
                 OnUpdateStatusBar("Vehicle routing failed!");
@@ -428,6 +474,69 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             }
         }
 
+        private async Task<OptimizationRunModel> StartOptRun(OptimizationRunModel optRun)
+        {
+            if (optRun.StartVertice > 0)
+            {
+                var vertices = optRun.Vertices;
+                var root = optRun.Root;
+                Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("Calculating distances")));
+                if (UseShortestPaths)
+                {
+                    await Task.Run(() => GraphUtils.Instance.CalculateShortestPaths(vertices, root, CalculateOnlyNeighbors));
+                }
+                else
+                {
+                    vertices.Add(root);
+                }
+
+                Application.Current.Dispatcher.Invoke(DispatcherPriority.Send, new Action(() => OnUpdateStatusBar("Running routing optimizer")));
+
+                var optimzer = new CapacitatedVehicleRoutingProblemWithTimeWindows();
+                optRun = optimzer.Start(optRun);
+            }
+            return optRun;
+        }
+
+        private async Task<OptimizationRunModel> InitOptRun()
+        {
+            List<GraphVertexClass> vertices = null;
+            GraphVertexClass root = null;
+
+            var optRun = new OptimizationRunModel();
+            optRun.UseVisitedEdges = UseVisitedEdges;
+            optRun.Capacity = VertexGroupSize;
+            optRun.UseLocalDistances = CalculateOnlyNeighbors;
+            optRun.UseShortestPaths = UseShortestPaths;
+
+            MessageMediator.SendMessage("Set storage location", "NaytaInfoboksiKayttajalle");
+            var startingVertex = await MapUtils.Instance.GetPointFromMap();
+
+            if (startingVertex != null)
+            {
+                if (UseVisitedEdges)
+                {
+                    var edges = GetEdgesFromKokooajaUrat(startingVertex);
+                    GraphUtils.Instance.KokoajauraList = new List<List<GraphEdgeClass>> { edges.ToList() };
+                }
+
+                root = GraphUtils.Instance.Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(startingVertex.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(startingVertex.Y));
+                optRun.StartVertice = root.ID;
+                optRun.Root = root;
+                if (GraphVertexList == null || GraphVertexList.Count < 4)
+                {
+                    vertices = GraphUtils.Instance.Graph.Vertices.ToList();
+                }
+                else
+                {
+                    vertices = GraphVertexList;
+                }
+                optRun.Vertices = vertices;
+                optRun.SlopeMultiplier = SlopeWeightMultiplier;
+                optRun.WetnessMultiplier = WetnessWeightMultiplier;
+            }
+            return optRun;
+        }
 
 
         public GraphicCollection ResultGraphics
@@ -882,6 +991,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         internal async void OnLoadLayersCommand()
         {
+          
             var viewModelManager = (IViewModelManager)Catel.IoC.ServiceLocator.Default.ResolveType(typeof(IViewModelManager));
             var viewModel = (KarttaViewModel)viewModelManager.ActiveViewModels.FirstOrDefault(vm => vm is KarttaViewModel);
             if (viewModel != null) await viewModel.InitializeMapAsync();
@@ -889,6 +999,18 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             await MapUtils.Instance.AddFeatureLayersAsGraphic();
             GraphUtils.Instance.AddFeatureLayersToGraph();
             Layers = MapUtils.MapViewService.Map.Layers;
+
+        }
+
+
+        private void ShowNotificationExecute()
+        {
+            Application.Current.Dispatcher.Invoke(DispatcherPriority.Normal, new Action(
+                () =>
+                {
+                    var notify = new NotificationView();
+                    notify.Show();
+                }));
         }
 
         private void OnUpdateMenuCommand()

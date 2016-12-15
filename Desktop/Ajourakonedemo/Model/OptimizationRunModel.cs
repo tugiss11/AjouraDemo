@@ -89,6 +89,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
 
         public static readonly PropertyData StartVerticeProperty = RegisterProperty("StartVertice", typeof(int));
 
+        [Ignore]
+        public GraphVertexClass Root
+        {
+            get { return GetValue<GraphVertexClass>(RootProperty); }
+            set { SetValue(RootProperty, value); }
+        }
+
+        public static readonly PropertyData RootProperty = RegisterProperty("Root", typeof(GraphVertexClass));
+
         public bool UseShortestPaths
         {
             get { return GetValue<bool>(UseShortestPathsProperty); }
@@ -97,7 +106,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
 
         public static readonly PropertyData UseShortestPathsProperty = RegisterProperty("UseShortestPaths", typeof(bool));
 
-
+        public override string ToString()
+        {
+            return string.Format("ID: {0}-{1}-{2}-{3}", StartVertice, Capacity, SlopeMultiplier, WetnessMultiplier);
+        }
 
     }
 }

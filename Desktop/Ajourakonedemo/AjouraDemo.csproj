@@ -244,6 +244,10 @@
     </Compile>
     <Compile Include="ViewsAndViewModels\GraphViewModel.cs" />
     <Compile Include="ViewsAndViewModels\MainWindowViewModel.cs" />
+    <Compile Include="ViewsAndViewModels\NotificationView.xaml.cs">
+      <DependentUpon>NotificationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewsAndViewModels\NotificationViewModel.cs" />
     <Compile Include="ViewsAndViewModels\ViewModelBase.cs" />
     <Compile Include="WeakEventListener.cs" />
     <Compile Include="App.xaml.cs">
@@ -269,6 +273,10 @@
     <Page Include="ViewsAndViewModels\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ViewsAndViewModels\NotificationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>

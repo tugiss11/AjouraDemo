@@ -144,8 +144,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             Mediator.SendMessage("Loading layers...", "UpdateStatusBar");
             Map.Layers.Clear();
 
-            string wmsPath = ConfigurationManager.AppSettings["taustakarttaWms"];
-            await MapUtils.Instance.LoadWmsLayerAsync(wmsPath, "Taustakartta", string.Empty, false);
+           
+
+
 
             //string basemapUri = ConfigurationManager.AppSettings["basemapUri"];
             //await MapUtils.Instance.LoadBasemapAsync(basemapUri, "Taustakartta");
@@ -154,22 +155,30 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             string tpkPath2 = ConfigurationManager.AppSettings["wetness"];
             await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath2, Path.GetFileName(tpkPath2), false);
 
+
+            string wmsPath = ConfigurationManager.AppSettings["taustakarttaWms"];
+            await MapUtils.Instance.LoadWmsLayerAsync(wmsPath, "Taustakartta", string.Empty, false);
+
             string tpkPath = ConfigurationManager.AppSettings["countours"];
             await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath, Path.GetFileName(tpkPath));
 
 
-            string tpkPath3 = ConfigurationManager.AppSettings["linedata"];
-            await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath3, Path.GetFileName(tpkPath3), false);
-
+          
             string tpkPath4 = ConfigurationManager.AppSettings["borders"];
             await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath4, Path.GetFileName(tpkPath4));
 
+            string tpkPath3 = ConfigurationManager.AppSettings["linedata"];
+            // await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath3, Path.GetFileName(tpkPath3), false);
+            await MapUtils.Instance.LoadArcGisShapefileLayerAsync(tpkPath3, Path.GetFileName(tpkPath3), false);
+
+
+
 
             string path = ConfigurationManager.AppSettings["Edges"];
-            await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path, Path.GetFileName(path));
+            await MapUtils.Instance.LoadArcGisShapefileLayerAsync(path, Path.GetFileName(path), true, true);
 
             string nodesPath = ConfigurationManager.AppSettings["Nodes"];
-            await MapUtils.Instance.LoadArcGisShapefileLayerAsync(nodesPath, Path.GetFileName(nodesPath));
+            await MapUtils.Instance.LoadArcGisShapefileLayerAsync(nodesPath, Path.GetFileName(nodesPath), true, true);
 
             string kuviorajatPath = ConfigurationManager.AppSettings["kuviot"];
             await MapUtils.Instance.LoadKuvioRajatFeatureTableAsync(kuviorajatPath);
