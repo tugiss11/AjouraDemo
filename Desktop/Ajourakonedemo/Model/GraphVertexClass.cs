@@ -1,4 +1,5 @@
-﻿using Esri.ArcGISRuntime.Geometry;
+﻿using System;
+using Esri.ArcGISRuntime.Geometry;
 
 namespace ArcGISRuntime.Samples.DesktopViewer.Model
 {
@@ -40,6 +41,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
                 return new MapPoint((double)X, (double)Y, new SpatialReference(3067));
             }
             return null;
+        }
+
+        public bool EqualsMapPointCoordinates(MapPoint mapPoint)
+        {
+            return Convert.ToInt32(X) == Convert.ToInt32(mapPoint.X) && Convert.ToInt32(Y) == Convert.ToInt32(mapPoint.Y);
         }
 
         public long[] Distances;

@@ -31,12 +31,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
     public class GraphUtils
     {
         private static readonly GraphUtils _instance = new GraphUtils();
-        protected readonly ILog log = LogManager.GetCurrentClassLogger();
+        protected readonly ILog Log = LogManager.GetCurrentClassLogger();
 
         public GraphUtils()
         {
             ShortestPathList = new List<ShortestPath>();
-            KokoajauraList = new List<List<GraphEdgeClass>>();
+            KokoojauraList = new List<List<GraphEdgeClass>>();
         }
 
         public static GraphUtils Instance
@@ -46,7 +46,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         internal List<ShortestPath> ShortestPathList { get; set; }
         internal List<MapPoint> GraphVerticesAsMapPoint { get; set; }
-        internal List<List<GraphEdgeClass>> KokoajauraList { get; set; }
+        internal List<List<GraphEdgeClass>> KokoojauraList { get; set; }
 
         public int SlopeWeightMultiplier { get; set; }
 
@@ -64,13 +64,14 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public bool UseOnlyDistances { get; set; }
         public bool UseVisitedEdges { get; set; }
+        public double VisitedMultiplier { get; set; }
 
 
         public List<GraphClassBidirectional> AddFeatureLayersToGraph()
         {
-            var graphList = new List<GraphClassBidirectional>();
-            var lineLayers = MapUtils.Instance.Map.Layers.OfType<FeatureLayer>().Where(o => o.FeatureTable.GeometryType == GeometryType.Polyline);
-            foreach (var layer in lineLayers)
+            List<GraphClassBidirectional> graphList = new List<GraphClassBidirectional>();
+            IEnumerable<FeatureLayer> lineLayers = MapUtils.Instance.Map.Layers.OfType<FeatureLayer>().Where(o => o.FeatureTable.GeometryType == GeometryType.Polyline);
+            foreach (FeatureLayer layer in lineLayers)
             {
                 graphList.Add(AddFeaturesToGraph(MapUtils.Instance.GraphicsLayer.Graphics, layer.FeatureTable.ObjectIDField));
             }
@@ -81,53 +82,56 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         private GraphClassBidirectional AddFeaturesToGraph(IEnumerable<Graphic> features, string objectIdField)
         {
-            var mapPointDictionary = new Dictionary<int, MapPoint>();
+            Dictionary<int, MapPoint> mapPointDictionary = new Dictionary<int, MapPoint>();
             int counter = 1;
-            var g = new GraphClass(false);
+            GraphClass g = new GraphClass(false);
 
-
-            
-
-            foreach (var feature in features)
+            foreach (Graphic feature in features)
             {
                 if (feature.Geometry != null && feature.Geometry.GeometryType == GeometryType.Polyline)
                 {
-                    var startPoint = ((Polyline)feature.Geometry).Parts.FirstOrDefault().StartPoint;
-                    var endPoint = ((Polyline)feature.Geometry).Parts.FirstOrDefault().EndPoint;
+                    MapPoint startPoint = ((Polyline)feature.Geometry).Parts.FirstOrDefault().StartPoint;
+                    MapPoint endPoint = ((Polyline)feature.Geometry).Parts.FirstOrDefault().EndPoint;
 
-                    var startId = CheckIfPointExistsInDictionary(mapPointDictionary, startPoint, ref counter);
-                    var endId = CheckIfPointExistsInDictionary(mapPointDictionary, endPoint, ref counter);
+                    int startId = CheckIfPointExistsInDictionary(mapPointDictionary, startPoint, ref counter);
+                    int endId = CheckIfPointExistsInDictionary(mapPointDictionary, endPoint, ref counter);
 
-                    var startVertex = g.Vertices.FirstOrDefault(o => o.ID == startId);
+                    GraphVertexClass startVertex = g.Vertices.FirstOrDefault(o => o.ID == startId);
                     if (startVertex == null)
                     {
 
-                     
+
                         startVertex = new GraphVertexClass(startId, startPoint.X, startPoint.Y);
                     }
 
-                    var endVertex = g.Vertices.FirstOrDefault(o => o.ID == endId);
+                    GraphVertexClass endVertex = g.Vertices.FirstOrDefault(o => o.ID == endId);
                     if (endVertex == null)
                     {
                         endVertex = new GraphVertexClass(endId, endPoint.X, endPoint.Y);
                     }
-                    var kaltevuus = Convert.ToDouble(feature.Attributes["sivukalt"]);
-                    var kosteus = Convert.ToInt32(feature.Attributes["kulkukelp"]);
+                    double sivukaltevuus = Convert.ToDouble(feature.Attributes[MapUtils.SivukaltString]);
+                    int kosteus = Convert.ToInt32(feature.Attributes[MapUtils.KulkukelpoisuusString]);
+                    double nousukaltevuus = Convert.ToDouble(feature.Attributes[MapUtils.NousukaltString]);
 
-                    if (Math.Abs(kaltevuus) > MapUtils.Instance.MaxAllowedSlope)
+                    if (Math.Abs(sivukaltevuus) > MapUtils.Instance.MaxAllowedSlope)
                     {
                         continue;
                     }
 
-                    var edge = new GraphEdgeClass(Convert.ToInt32(feature.Attributes[objectIdField]), kaltevuus, kosteus, startVertex, endVertex);
+                    if (Math.Abs(nousukaltevuus) > MapUtils.Instance.MaxAllowedForwardSlope)
+                    {
+                        continue;
+                    }
+
+                    GraphEdgeClass edge = new GraphEdgeClass(Convert.ToInt32(feature.Attributes[objectIdField]), sivukaltevuus, nousukaltevuus, kosteus, startVertex, endVertex);
                     g.AddVerticesAndEdge(edge);
 
-                    
+
                 }
             }
             Graph = g;
             InitMapPointList(g);
-            var returnvalue = new GraphClassBidirectional();
+            GraphClassBidirectional returnvalue = new GraphClassBidirectional();
             returnvalue.AddVertexRange(g.Vertices);
             returnvalue.AddEdgeRange(g.Edges);
             return returnvalue;
@@ -138,7 +142,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         private void InitMapPointList(GraphClass graphClass)
         {
             GraphVerticesAsMapPoint = new List<MapPoint>();
-            foreach (var vertex in graphClass.Vertices)
+            foreach (GraphVertexClass vertex in graphClass.Vertices)
             {
                 if (vertex.X != null && vertex.Y != null)
                 {
@@ -150,7 +154,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         private static int CheckIfPointExistsInDictionary(Dictionary<int, MapPoint> mapPointDictionary, MapPoint startPoint, ref int counter)
         {
             int startId;
-            var existingPoint = mapPointDictionary.FirstOrDefault(o => o.Value.X == startPoint.X && o.Value.Y == startPoint.Y);
+            KeyValuePair<int, MapPoint> existingPoint = mapPointDictionary.FirstOrDefault(o => o.Value.X == startPoint.X && o.Value.Y == startPoint.Y);
             if (existingPoint.Value != null)
             {
                 startId = existingPoint.Key;
@@ -179,49 +183,63 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         private double EdgeWeights(GraphEdgeClass graphEdgeClass)
         {
-            var weight = 0.0;
 
-            weight = 17 + (SlopeWeightMultiplier * Math.Abs((double)graphEdgeClass.Sivukaltevuus) + (WetnessWeightMultiplier * graphEdgeClass.Kosteus));
+            double weight = 17;
 
+
+
+            weight = weight + (SlopeWeightMultiplier * Math.Abs(graphEdgeClass.Sivukaltevuus) + WetnessWeightMultiplier * graphEdgeClass.Kosteus);
 
             if (UseVisitedEdges && graphEdgeClass.IsVisited)
             {
-                weight = weight * 0.25;
+                weight = weight * VisitedMultiplier;
             }
 
-            if (graphEdgeClass.IsVisited)
+
+            if (graphEdgeClass.Sivukaltevuus > MapUtils.Instance.MaxAllowedSlope || graphEdgeClass.Nousukaltevuus > MapUtils.Instance.MaxAllowedForwardSlope)
             {
-                weight = weight * 0.25;
+                weight = weight*30;
             }
 
             graphEdgeClass.Weight = weight;
+            //Debug.WriteLine("Edge {0} Weight: {1}", graphEdgeClass.Id, graphEdgeClass.Weight);
             return weight;
         }
 
 
 
-        public GraphVertexClass AddKokoajauraFromStartPointToEndPoint(MapPoint startingVertex, MapPoint endingVertex)
+        public bool AddKokoajauraFromStartPointToEndPoint(MapPoint startingVertex, MapPoint endingVertex)
         {
 
             if (Graph == null)
             {
                 MessageBox.Show("Graph is null");
-                return null;
+                return false;
             }
 
-            var root = Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(startingVertex.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(startingVertex.Y));
-            var target = Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(endingVertex.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(endingVertex.Y));
+            GraphVertexClass root = Graph.Vertices.FirstOrDefault(o => o.EqualsMapPointCoordinates(startingVertex));
+            GraphVertexClass target = Graph.Vertices.FirstOrDefault(o => o.EqualsMapPointCoordinates(endingVertex));
 
-            var edgeList = ShortestPathAlgorithm(root, target);
+            if (target == null || root == null)
+            {
+                return false;
+            }
+
+            List<GraphEdgeClass> edgeList = ShortestPathAlgorithm(root, target);
+            if (!edgeList.Any())
+            {
+                Graph.RemoveVertex(target);
+                return false;
+            }
             AddEdgeListToKokoajaUraList(edgeList);
-            return root;
+            return true;
 
 
         }
 
         private void AddEdgeListToKokoajaUraList(List<GraphEdgeClass> edgeList)
         {
-            KokoajauraList.Add(edgeList);
+            KokoojauraList.Add(edgeList);
         }
 
         public List<GraphEdgeClass> ShortestPathAlgorithm(GraphVertexClass root, GraphVertexClass target)
@@ -232,7 +250,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             TryFunc<GraphVertexClass, IEnumerable<GraphEdgeClass>> tryGetPaths = Graph.ShortestPathsDijkstra(edgeWeights, root);
 
             // query path for given vertices
-            var edgleList = new List<GraphEdgeClass>();
+            List<GraphEdgeClass> edgleList = new List<GraphEdgeClass>();
 
             IEnumerable<GraphEdgeClass> path;
             if (tryGetPaths(target, out path))
@@ -244,10 +262,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         {
 
             // we are already running, so tell the tsp thread to halt.
-            var tsp = new TSP2.Tsp();
+            TSP2.Tsp tsp = new TSP2.Tsp();
             try
             {
-                var cityList = new TSPVertices();
+                TSPVertices cityList = new TSPVertices();
                 if (graphVertexList == null)
                 {
                     graphVertexList = Graph.Vertices.ToList();
@@ -261,7 +279,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 int seed;
                 int numberOfCloseCities;
                 int chanceUseCloseCity;
-                var populationSize = SetParameters(population, maxgenerations, out maxGenerations, out mutation, out groupSize, out seed, out numberOfCloseCities, out chanceUseCloseCity);
+                int populationSize = SetParameters(population, maxgenerations, out maxGenerations, out mutation, out groupSize, out seed, out numberOfCloseCities, out chanceUseCloseCity);
                 cityList.CalculateVertexDistances(token, numberOfCloseCities);
 
 
@@ -302,9 +320,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         private void GetVerticesAsTspVertices(TSPVertices tspVertexList)
         {
-            var verticeList = Graph.Vertices.ToList();
+            List<GraphVertexClass> verticeList = Graph.Vertices.ToList();
 
-            foreach (var vertice in verticeList)
+            foreach (GraphVertexClass vertice in verticeList)
             {
                 if (vertice.ID < 10)
                 {
@@ -319,10 +337,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
 
                 this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage("Set point to visit ", "NaytaInfoboksiKayttajalle");
-                var mapPoint = await MapUtils.Instance.GetPointFromMap();
+                MapPoint mapPoint = await MapUtils.Instance.GetPointFromMap();
                 if (mapPoint != null)
                 {
-                    var vertice = GetVerticeFromMapPoint(mapPoint);
+                    GraphVertexClass vertice = GetVerticeFromMapPoint(mapPoint);
                     return vertice;
                 }
             }
@@ -334,21 +352,21 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         private GraphVertexClass GetVerticeFromMapPoint(MapPoint mapPoint)
         {
-            var vertice = Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(mapPoint.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(mapPoint.Y));
+            GraphVertexClass vertice = Graph.Vertices.FirstOrDefault(o => Convert.ToInt32(o.X) == Convert.ToInt32(mapPoint.X) && Convert.ToInt32(o.Y) == Convert.ToInt32(mapPoint.Y));
             return vertice;
         }
 
         internal void AddTspVerticesFromGraphVertices(TSPVertices tspVertexList, List<GraphVertexClass> graphVertices, GraphVertexClass startingVertex)
         {
-            foreach (var vertex in graphVertices)
+            foreach (GraphVertexClass vertex in graphVertices)
             {
                 tspVertexList.Add(new TSPVertice(Convert.ToInt32(vertex.X), Convert.ToInt32(vertex.Y), vertex.ID));
             }
             //Set starting vertex
             if (startingVertex != null)
             {
-                var index = tspVertexList.FindIndex(o => o.Id == startingVertex.ID);
-                var item = tspVertexList[index];
+                int index = tspVertexList.FindIndex(o => o.Id == startingVertex.ID);
+                TSPVertice item = tspVertexList[index];
                 tspVertexList[index] = tspVertexList[0];
                 tspVertexList[0] = item;
             }
@@ -364,8 +382,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         {
 
             _tourCount++;
-            var fitnessToCompare = _oldFitness;
-            var newFitness = e.BestTour.Fitness;
+            double fitnessToCompare = _oldFitness;
+            double newFitness = e.BestTour.Fitness;
             if (_tourCount > _tourToShowCount)
             {
                 _tourToShowCount = _tourToShowCount + 5;
@@ -402,15 +420,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public double GetDistance(TSPVertice starVertice, TSPVertice endVertice)
         {
-            var graphStartVertice = Graph.Vertices.FirstOrDefault(o => o.ID == starVertice.Id);
-            var graphEndVertice = Graph.Vertices.FirstOrDefault(o => o.ID == endVertice.Id);
-            var edges = ShortestPathAlgorithm(graphStartVertice, graphEndVertice);
-            var index = ShortestPathList.FindIndex(o => (o.VertexId1 == starVertice.Id && o.VertexId2 == endVertice.Id) || (o.VertexId1 == starVertice.Id && o.VertexId2 == endVertice.Id));
+            GraphVertexClass graphStartVertice = Graph.Vertices.FirstOrDefault(o => o.ID == starVertice.Id);
+            GraphVertexClass graphEndVertice = Graph.Vertices.FirstOrDefault(o => o.ID == endVertice.Id);
+            List<GraphEdgeClass> edges = ShortestPathAlgorithm(graphStartVertice, graphEndVertice);
+            int index = ShortestPathList.FindIndex(o => (o.VertexId1 == starVertice.Id && o.VertexId2 == endVertice.Id) || (o.VertexId1 == starVertice.Id && o.VertexId2 == endVertice.Id));
             ShortestPathList.RemoveAt(index);
-            var distance = edges.Aggregate(0, (current, edge) => current + Convert.ToInt32(edge.Weight));
+            int distance = edges.Aggregate(0, (current, edge) => current + Convert.ToInt32(edge.Weight));
             ShortestPathList.Add(new ShortestPath { ShortestPathEdges = edges, VertexId1 = graphStartVertice.ID, VertexId2 = graphEndVertice.ID, Distance = distance });
 
-            foreach (var edge in edges)
+            foreach (GraphEdgeClass edge in edges)
             {
                 edge.IsVisited = true;
             }
@@ -419,7 +437,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public void ResetVisited()
         {
-            foreach (var edge in Graph.Edges)
+            foreach (GraphEdgeClass edge in Graph.Edges)
             {
                 edge.IsVisited = false;
                 edge.VisitedCount = 0;
@@ -431,7 +449,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             pointSet = new List<MapPoint>(pointSet);
             Geometry unionGeometry = null;
             List<Geometry> allKokoajaGeometries = new List<Geometry>();
-            foreach (var kokoajaura in KokoajauraList)
+            foreach (List<GraphEdgeClass> kokoajaura in KokoojauraList)
             {
                 List<Geometry> geometryList = MapUtils.Instance.GetGeometriesWithIdsFromGraphicLayer(kokoajaura.Select(o => o.Id));
                 allKokoajaGeometries.AddRange(geometryList);
@@ -441,7 +459,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 unionGeometry = GeometryEngine.Buffer(GeometryEngine.Union(allKokoajaGeometries), kokoajauraBufferValue);
                 List<MapPoint> pointsNotCovered = new List<MapPoint>();
 
-                foreach (var point in pointSet)
+                foreach (MapPoint point in pointSet)
                 {
                     if (!GeometryEngine.Intersects(point, GeometryEngine.Project(unionGeometry, point.SpatialReference)))
                     {
@@ -461,15 +479,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public List<List<GraphVertexClass>> GetGraphVertexListsFromKokoajaurat(int kokoajauraBufferValue, int groupsize)
         {
-            var pointNotCovered = new List<MapPoint>(GraphVerticesAsMapPoint);
-            var result = new List<List<GraphVertexClass>>();
-            foreach (var kokoaja in KokoajauraList)
+            List<MapPoint> pointNotCovered = new List<MapPoint>(GraphVerticesAsMapPoint);
+            List<List<GraphVertexClass>> result = new List<List<GraphVertexClass>>();
+            foreach (List<GraphEdgeClass> kokoaja in KokoojauraList)
             {
-                var kokoajauraLineGeometry = GeometryEngine.Union(MapUtils.Instance.GetGeometriesWithIdsFromGraphicLayer(kokoaja.Select(o => o.Id))) as Polyline;
-                var kokoajaGeometry = GeometryEngine.Buffer(kokoajauraLineGeometry, kokoajauraBufferValue);
+                Polyline kokoajauraLineGeometry = GeometryEngine.Union(MapUtils.Instance.GetGeometriesWithIdsFromGraphicLayer(kokoaja.Select(o => o.Id))) as Polyline;
+                Geometry kokoajaGeometry = GeometryEngine.Buffer(kokoajauraLineGeometry, kokoajauraBufferValue);
                 List<MapPoint> kokoajauraPoints = new List<MapPoint>();
-                var tempPointList = new List<MapPoint>();
-                foreach (var point in pointNotCovered)
+                List<MapPoint> tempPointList = new List<MapPoint>();
+                foreach (MapPoint point in pointNotCovered)
                 {
                     if (GeometryEngine.Intersects(point, GeometryEngine.Project(kokoajaGeometry, point.SpatialReference)))
                     {
@@ -481,12 +499,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     }
                 }
                 bool isHorizontal = (kokoajaGeometry.Extent.XMax - kokoajaGeometry.Extent.XMin) > (kokoajaGeometry.Extent.YMax - kokoajaGeometry.Extent.YMin);
-                var startPoint = kokoajauraLineGeometry.Parts.FirstOrDefault().StartPoint;
-                var endPoint = kokoajauraLineGeometry.Parts.FirstOrDefault().EndPoint;
+                MapPoint startPoint = kokoajauraLineGeometry.Parts.FirstOrDefault().StartPoint;
+                MapPoint endPoint = kokoajauraLineGeometry.Parts.FirstOrDefault().EndPoint;
 
-                var leftPoints = new List<MapPoint>();
-                var rightPoints = new List<MapPoint>();
-                foreach (var point in kokoajauraPoints)
+                List<MapPoint> leftPoints = new List<MapPoint>();
+                List<MapPoint> rightPoints = new List<MapPoint>();
+                foreach (MapPoint point in kokoajauraPoints)
                 {
 
                     if (isLeft(startPoint, endPoint, point))
@@ -512,11 +530,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         {
             while (kokoajauraPoints.Any())
             {
-                var points = new List<MapPoint>();
-                var points2 = new List<MapPoint>();
+                List<MapPoint> points = new List<MapPoint>();
+                List<MapPoint> points2 = new List<MapPoint>();
                 if (kokoajauraPoints.Count > groupsize * 1.5)
                 {
-                    var sorted = new List<MapPoint>();
+                    List<MapPoint> sorted = new List<MapPoint>();
                     List<MapPoint> sortedSubgroups;
                     if (isHorizontal)
                     {
@@ -557,23 +575,23 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         private void SetStartPointOnKokoajaUra(Geometry kokoajauraLineGeometry, List<MapPoint> points)
         {
-            var index = points.FindIndex(o => GeometryEngine.Intersects(o, GeometryEngine.Project(kokoajauraLineGeometry, o.SpatialReference)));
+            int index = points.FindIndex(o => GeometryEngine.Intersects(o, GeometryEngine.Project(kokoajauraLineGeometry, o.SpatialReference)));
             if (index != -1)
             {
-                var item = points[index];
+                MapPoint item = points[index];
                 points[index] = points[0];
                 points[0] = item;
             }
             else
             {
-                log.Info("Index not found");
+                Log.Info("Index not found");
             }
         }
 
         private void AddPointsToResult(List<MapPoint> points, List<List<GraphVertexClass>> result)
         {
-            var verticeList = new List<GraphVertexClass>();
-            foreach (var point in points)
+            List<GraphVertexClass> verticeList = new List<GraphVertexClass>();
+            foreach (MapPoint point in points)
             {
                 verticeList.Add(GetVerticeFromMapPoint(point));
             }
@@ -583,10 +601,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         public void SetKokoajauratAsVisitedAndResetShortestPaths()
         {
             ShortestPathList = new List<ShortestPath>();
-            foreach (var edge in Graph.Edges)
+            foreach (GraphEdgeClass edge in Graph.Edges)
             {
                 edge.IsVisited = false;
-                if (KokoajauraList.Any(kokoaja => kokoaja.FirstOrDefault(o => o.Id == edge.Id) != null))
+                if (KokoojauraList.Any(kokoaja => kokoaja.FirstOrDefault(o => o.Id == edge.Id) != null))
                 {
                     edge.IsVisited = true;
                 }
@@ -595,10 +613,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public void MarkEdgesVisited(TspEventArgs tspEventArgs)
         {
-            var edges = MapUtils.Instance.GetGraphEdgeClassesFromEvents(tspEventArgs);
-            foreach (var edge in edges)
+            List<GraphEdgeClass> edges = MapUtils.Instance.GetGraphEdgeClassesFromEvents(tspEventArgs);
+            foreach (GraphEdgeClass edge in edges)
             {
-                var visited = Graph.Edges.FirstOrDefault(o => o.Id == edge.Id);
+                GraphEdgeClass visited = Graph.Edges.FirstOrDefault(o => o.Id == edge.Id);
                 if (visited != null)
                 {
                     visited.IsVisited = true;
@@ -608,11 +626,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public void GetCountForEachEdgeInKokoajatUrat()
         {
-            foreach (var path in KokoajauraList)
+            foreach (List<GraphEdgeClass> path in KokoojauraList)
             {
-                foreach (var edge in path)
+                foreach (GraphEdgeClass edge in path)
                 {
-                    var graphEdge = Graph.Edges.FirstOrDefault(o => o.Id == edge.Id);
+                    GraphEdgeClass graphEdge = Graph.Edges.FirstOrDefault(o => o.Id == edge.Id);
                     if (graphEdge != null)
                     {
                         graphEdge.VisitedCount = graphEdge.VisitedCount + 1;
@@ -623,12 +641,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     }
                     else
                     {
-                        log.Error("Cannot find edge");
+                        Log.Error("Cannot find edge");
                     }
                 }
             }
 
-            foreach (var edge in Graph.Edges)
+            foreach (GraphEdgeClass edge in Graph.Edges)
             {
                 Debug.WriteLine(edge.VisitedCount);
             }
@@ -637,12 +655,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         public void CalculateShortestPaths(List<GraphVertexClass> vertices, GraphVertexClass root, bool calculateOnlyNeighbors)
         {
             ShortestPathList = new List<ShortestPath>();
-            var shortestPathList = new List<ShortestPath>();
+            List<ShortestPath> shortestPathList = new List<ShortestPath>();
             vertices.Add(root);
-            var verticesArray = vertices.ToArray();
+            GraphVertexClass[] verticesArray = vertices.ToArray();
             Parallel.ForEach(vertices, vertice =>
             {
-                var tempList = ShortestPaths(root, calculateOnlyNeighbors, vertice, verticesArray);
+                List<ShortestPath> tempList = ShortestPaths(root, calculateOnlyNeighbors, vertice, verticesArray);
                 shortestPathList.AddRange(tempList);
             });
             ShortestPathList = shortestPathList;
@@ -650,15 +668,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         private List<ShortestPath> ShortestPaths(GraphVertexClass root, bool calculateOnlyNeighbors, GraphVertexClass vertice, GraphVertexClass[] verticesArray)
         {
-            var tempList = new List<ShortestPath>();
+            List<ShortestPath> tempList = new List<ShortestPath>();
             vertice.Neighbours = new int[verticesArray.Length];
 
 
             vertice.Distances = new long[verticesArray.Length];
-            for (var index = 0; index < verticesArray.Length; ++index)
+            for (int index = 0; index < verticesArray.Length; ++index)
             {
-                var startVertice = vertice;
-                var endVertice = verticesArray[index];
+                GraphVertexClass startVertice = vertice;
+                GraphVertexClass endVertice = verticesArray[index];
 
                 if (startVertice.ID == endVertice.ID)
                 {
@@ -668,10 +686,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 }
 
 
-                var isAdjacent = false;
+                bool isAdjacent = false;
                 if (calculateOnlyNeighbors)
                 {
-                    foreach (var adjacentEdge in Graph.AdjacentEdges(startVertice))
+                    foreach (GraphEdgeClass adjacentEdge in Graph.AdjacentEdges(startVertice))
                     {
                         if (adjacentEdge.IsAdjacent(endVertice))
                         {
@@ -686,13 +704,13 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 }
                 else
                 {
-                    var edges = ShortestPathAlgorithm(startVertice, endVertice);
+                    List<GraphEdgeClass> edges = ShortestPathAlgorithm(startVertice, endVertice);
                     if (edges.Any())
                     {
                         long distance = edges.Aggregate(0, (current, edge) => current + Convert.ToInt32(edge.Weight));
                         vertice.Neighbours[index] = endVertice.ID;
                         vertice.Distances[index] = distance;
-                        var path = new ShortestPath {ShortestPathEdges = edges, VertexId1 = startVertice.ID, VertexId2 = endVertice.ID, Distance = distance};
+                        ShortestPath path = new ShortestPath { ShortestPathEdges = edges, VertexId1 = startVertice.ID, VertexId2 = endVertice.ID, Distance = distance };
                         tempList.Add(path);
                     }
                     else
@@ -724,29 +742,41 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         public async Task UpdatePuutToGraphAsync()
         {
 
-            var nodesLayer = MapUtils.Instance.Map.Layers[Path.GetFileName(ConfigurationManager.AppSettings["Nodes"])] as FeatureLayer;
+            FeatureLayer nodesLayer = MapUtils.Instance.Map.Layers[Path.GetFileName(ConfigurationManager.AppSettings["Nodes"])] as FeatureLayer;
 
 
             if (nodesLayer == null)
                 return;
 
 
-            var nodes = (await nodesLayer.FeatureTable.QueryAsync(new QueryFilter() { WhereClause = "1=1" })).ToList();
-            foreach (var vertice in Graph.Vertices)
+            List<Feature> nodes = (await nodesLayer.FeatureTable.QueryAsync(new QueryFilter() { WhereClause = "1=1" })).ToList();
+            foreach (GraphVertexClass vertice in Graph.Vertices)
             {
-                var node = nodes.FirstOrDefault(o => GeometryEngine.Intersects(o.Geometry, new MapPoint((double)vertice.X,(double)vertice.Y, o.Geometry.SpatialReference)));
+                Feature node = nodes.FirstOrDefault(o => GeometryEngine.Intersects(o.Geometry, new MapPoint((double)vertice.X, (double)vertice.Y, o.Geometry.SpatialReference)));
                 if (node != null)
                 {
-                    vertice.Puumaara = Convert.ToInt32(Convert.ToDouble(node.Attributes["V"])*1000*0.2);
+                    vertice.Puumaara = Convert.ToInt32(Convert.ToDouble(node.Attributes["V"]) * 1000 * 0.2);
                 }
                 else
                 {
-                    log.Error("Ei löydy nodea");
+                    Log.Error("Ei löydy nodea");
                 }
             }
 
 
-            
+
+        }
+
+        public void RemoveKokoojauraVertices(List<GraphVertexClass> vertices)
+        {
+            foreach (List<GraphEdgeClass> edgeList in KokoojauraList)
+            {
+                foreach (GraphEdgeClass edge in edgeList)
+                {
+                    vertices.Remove(edge.Source);
+                    vertices.Remove(edge.Target);
+                }
+            }
         }
     }
 }

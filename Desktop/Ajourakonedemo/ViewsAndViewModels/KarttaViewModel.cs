@@ -159,7 +159,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             await MapUtils.Instance.LoadWmsLayerAsync(wmsPath, "Taustakartta", string.Empty, false);
 
             string tpkPath = ConfigurationManager.AppSettings["countours"];
-            await MapUtils.Instance.LoadRuntimeContentLayerAsync(tpkPath, Path.GetFileName(tpkPath));
+            await MapUtils.Instance.LoadArcGisLocalTiledLayerAsync(tpkPath, Path.GetFileName(tpkPath), false);
 
           
             string tpkPath4 = ConfigurationManager.AppSettings["borders"];
@@ -383,15 +383,18 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                 result.Add("Nousekaltevuus:", feature1.Attributes["nousukalt"]);
                 result.Add("Kulkukelpoisuus", feature1.Attributes["kulkukelp"]);
             }
-            if (feature2 != null)
+            if (ConfigurationManager.AppSettings["hasPuudata"] == "true")
             {
-                result.Add("T (ikä)", feature2.Attributes["T"]);
-                result.Add("H (korkeus)", feature2.Attributes["H"]);
-                result.Add("N (rl)", feature2.Attributes["N"]);
-                result.Add("D (lpm)", feature2.Attributes["D"]);
-                result.Add("V (til)", feature2.Attributes["V"]);
-                result.Add("G (ppa)", feature2.Attributes["G"]);
+                if (feature2 != null)
+                {
+                    result.Add("T (ikä)", feature2.Attributes["T"]);
+                    result.Add("H (korkeus)", feature2.Attributes["H"]);
+                    result.Add("N (rl)", feature2.Attributes["N"]);
+                    result.Add("D (lpm)", feature2.Attributes["D"]);
+                    result.Add("V (til)", feature2.Attributes["V"]);
+                    result.Add("G (ppa)", feature2.Attributes["G"]);
 
+                }
             }
             return result;
            

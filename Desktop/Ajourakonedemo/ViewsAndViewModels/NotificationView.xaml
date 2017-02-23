@@ -3,7 +3,7 @@
     xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:catel="http://catel.codeplex.com" x:Name="NotificationWindow"
-    Title="NotificationWindow" Height="40" Width="300" ShowInTaskbar="False"
+    Title="NotificationWindow" Height="40" Width="300" ShowInTaskbar="True"
     WindowStyle="None" AllowsTransparency="True" 
     Background="Transparent">
     <Window.Resources>
@@ -38,7 +38,13 @@
         </LinearGradientBrush> 
     </ResourceDictionary>
     </Window.Resources>
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding Path=SeuraavaViivaCommand}" Key="Enter"/>
+    </Window.InputBindings>
+    
     <Grid RenderTransformOrigin="0,1" >
+        
+        
         <Border BorderThickness="2" Background="{StaticResource GradientBackground}" BorderBrush="Black" CornerRadius="7">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -51,19 +57,19 @@
                     <RowDefinition Height="35"/>
                 
                 </Grid.RowDefinitions>
-                <Button Grid.Column="1"
+                <Button Grid.Column="0"
                     Grid.Row="0"
                     FontSize="15"
                     Margin="0,-3,0,0"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Content="Viiva" 
+                    Content="Seuraava" 
                     Command="{Binding SeuraavaViivaCommand}"
                     CommandParameter="{Binding ElementName=NotificationWindow}"
                     Style="{StaticResource LinkButton}"/>
 
 
-                <Button Grid.Column="0"
+           <!--     <Button Grid.Column="0"
                     Grid.Row="0"
                     FontSize="15"
                     Margin="0,-3,0,0"
@@ -72,7 +78,7 @@
                     Content="Solmu" 
                     Command="{Binding SeuraavaSolmuCommand}"
                     CommandParameter="{Binding ElementName=NotificationWindow}"
-                    Style="{StaticResource LinkButton}"/>
+                    Style="{StaticResource LinkButton}"/> -->
 
                 <Button Grid.Column="2"
                     Grid.Row="0"
@@ -93,7 +99,7 @@
                 <BeginStoryboard x:Name="StoryboardLoad">
                     <Storyboard>
                         <DoubleAnimation Storyboard.TargetProperty="(UIElement.Opacity)" From="0.0" To="1.0" Duration="0:0:2" />
-                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.Opacity)" From="1.0" To="0.0" Duration="0:0:8" BeginTime="0:0:5" Completed="DoubleAnimationCompleted"/>
+                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.Opacity)" From="1.0" To="0.5" Duration="0:0:10" BeginTime="0:0:5" Completed="DoubleAnimationCompleted"/>
                     </Storyboard>
                 </BeginStoryboard>
             </EventTrigger>
@@ -108,7 +114,7 @@
             <EventTrigger RoutedEvent="Mouse.MouseLeave">
                 <BeginStoryboard x:Name="StoryboardFade">
                     <Storyboard>
-                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.Opacity)" From="1.0" To="0.0" Duration="0:0:30" BeginTime="0:0:2" Completed="DoubleAnimationCompleted"/>
+                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.Opacity)" From="1.0" To="0.5" Duration="0:0:10" BeginTime="0:0:2" Completed="DoubleAnimationCompleted"/>
                     </Storyboard>
                 </BeginStoryboard>
             </EventTrigger>

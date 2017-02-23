@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using QuickGraph;
 
 namespace ArcGISRuntime.Samples.DesktopViewer.Model
@@ -18,6 +19,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
         }
 
         public double Sivukaltevuus { get; set;}
+
+
+        public double Nousukaltevuus { get; set; }
         public int Kosteus { get; set; }
         public double Weight { get; set; }
         public bool IsVisited { get; set;} 
@@ -25,12 +29,13 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
         public int VisitedCount { get; set; }
         public int Korjuukelpoisuus { get; set; }
 
-        public GraphEdgeClass(int id, double sivukaltevuus, int kosteus, GraphVertexClass source, GraphVertexClass target)
+        public GraphEdgeClass(int id, double sivukaltevuus, double nousukaltevuus, int kosteus, GraphVertexClass source, GraphVertexClass target)
             : base(source, target)
         {
             Id = id;
             Kosteus = kosteus;
-            Sivukaltevuus = sivukaltevuus;
+            Sivukaltevuus = Math.Abs(sivukaltevuus);
+            Nousukaltevuus = Math.Abs(nousukaltevuus);
             VisitedCount = 0;
         }
 

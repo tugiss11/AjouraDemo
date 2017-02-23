@@ -49,10 +49,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private void DoubleAnimationCompleted(object sender, EventArgs e)
         {
-            if (!this.IsMouseOver)
-            {
-                this.Close();
-            }
+           
         }
 
         private void NotificationWindowClosed(object sender, EventArgs e)

@@ -15,7 +15,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
         public int Puumaaraa { get; set; }
       
         public int Id { get; set; }
-      
+        public double MatkaTyhjana { get; set; }
+        public double MatkaTaytena { get; set; }
+
 
         public override string ToString()
         {

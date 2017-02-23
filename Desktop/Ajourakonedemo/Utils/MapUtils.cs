@@ -35,8 +35,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         private static readonly MapUtils _instance = new MapUtils();
         private IViewModelManager _viewModelManager;
         private IMessageMediator _mes;
-        private string kulkukelpoisuusString = "kulkukelp";
-        private string sivukaltString = "sivukalt";
+        internal const string KulkukelpoisuusString = "kulkukelp";
+        internal const string SivukaltString = "sivukalt";
+        internal const string NousukaltString = "nousukalt";
 
         public MapUtils()
         {
@@ -177,6 +178,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public IEnumerable<Graphic> SavedHightlights { get; set; }
         public int MaxAllowedSlope { get; set; }
+
+        public int MaxAllowedForwardSlope { get; set; }
 
         #region Methods
 
@@ -450,14 +453,16 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 //    continue;
                 //}
 
-                var kaltevuus = Math.Abs(Convert.ToDouble(feature.Attributes[sivukaltString]));
+                var sivukaltevuus = Math.Abs(Convert.ToDouble(feature.Attributes[SivukaltString]));
+                var nousu = Math.Abs(Convert.ToDouble(feature.Attributes[NousukaltString]));
 
-
-                if (kaltevuus > MaxAllowedSlope)
+                if (sivukaltevuus > MaxAllowedSlope || nousu > MaxAllowedForwardSlope)
                 {
                     continue;
                 }
-                feature.Attributes[sivukaltString] = kaltevuus;
+           
+                feature.Attributes[NousukaltString] = nousu;
+                feature.Attributes[SivukaltString] = sivukaltevuus;
 
                 try
                 {
@@ -513,12 +518,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             //renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, 4, 4));
             //renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, 5, 5));
 
-            renderer.Field = sivukaltString;
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.Green, 1, 1));
+            renderer.Field = SivukaltString;
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.Green, -1, 1));
             renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, -13, -10));
             renderer.Infos.Add(CreateClassBreakInfo(Colors.OrangeRed, 10, 13));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, -6, -2));
-            renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, 2, 6));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, -6, -1));
+            renderer.Infos.Add(CreateClassBreakInfo(Colors.YellowGreen, 1, 6));
             renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, -10, -6));
             renderer.Infos.Add(CreateClassBreakInfo(Colors.Yellow, 6, 10));
             renderer.Infos.Add(CreateClassBreakInfo(Colors.Red, 13, 50));
@@ -526,7 +531,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
             renderer.DefaultSymbol = new SimpleLineSymbol
             {
-                Color = GetRandomColor(),
+                Color = Colors.Black,
                 Style = SimpleLineStyle.Solid,
                 Width = 3
             };
@@ -617,15 +622,17 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         }
 
-        public void HighlightEdges(IEnumerable<GraphEdgeClass> mst, bool resetSelection = true)
+        public List<Graphic> HighlightEdges(IEnumerable<GraphEdgeClass> mst, bool resetSelection = true)
         {
             var idCollection = mst.Select(o => o.Id);
 
-            HightlightIds(idCollection, resetSelection);
+            var result = HightlightIds(idCollection, resetSelection);
+            return result;
         }
 
-        private void HightlightIds(IEnumerable<int> ids, bool resetSelection = true)
+        private List<Graphic> HightlightIds(IEnumerable<int> ids, bool resetSelection = true)
         {
+            var result = new List<Graphic>();
             //MapViewService.MapView.SetView(new Envelope(366555.233146185, 6709824.6234944, 367256.720295555, 6710293.90540683));
             var grlayer = GraphicsLayer;
             if (grlayer != null)
@@ -644,6 +651,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     var graphic = grlayer.Graphics.FirstOrDefault(o => Convert.ToInt32(o.Attributes["FID"]) == id);
                     if (graphic != null)
                     {
+                        result.Add(graphic);
                         graphic.IsSelected = true;
                     }
                     else
@@ -652,7 +660,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     }
                 }
             }
-
+            return result;
             //_mes.SendMessage("Hightlights changed!", "UpdateStatusBar");
         }
 
@@ -1038,9 +1046,11 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             return result;
         }
 
-        public void DrawRouteFromOrderList(long[] orderList, GraphVertexClass[] vertices, bool useShortestPaths = false, Color color = default(Color))
+        public Tuple<double, double> DrawRouteFromOrderList(long[] orderList, GraphVertexClass[] vertices, bool useShortestPaths = false, Color color = default(Color))
         {
             //DrawRoutesToStartLocation(orderList, vertices, useShortestPaths, startVertice);
+            var matkaTyhjana = 0.0;
+            var matkaTaytena = 0.0;
 
             for (int index = 0; index < orderList.Length - 1; ++index)
             {
@@ -1080,10 +1090,19 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                         }
                     }
 
-                    HighlightEdges(polylineList, false);
+                    var result = HighlightEdges(polylineList, false);
+                    if (index == 0)
+                    {
+                        matkaTyhjana = Math.Abs(GeometryEngine.Length(GeometryEngine.Union(result.Select(o => o.Geometry))));
+                    }
+                    else if (index == orderList.Length - 2)
+                    {
+                        matkaTaytena = Math.Abs(GeometryEngine.Length(GeometryEngine.Union(result.Select(o => o.Geometry))));
+                    }
                 }
 
             }
+            return new Tuple<double, double>(matkaTyhjana, matkaTaytena);
         }
 
         private void DrawRoutesToStartLocation(long[] orderList, GraphVertexClass[] vertices, bool useShortestPaths, GraphVertexClass startVertice)

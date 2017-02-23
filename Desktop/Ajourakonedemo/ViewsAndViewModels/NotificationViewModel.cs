@@ -31,7 +31,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         private void OnSeuraavaViivaCommand(Window window)
         {
             HideWindow(window);
-            NotifyViewModelResult = NotifyResult.Close;
+            NotifyViewModelResult = NotifyResult.NextLine;
         }
 
         private void OnSeuraavaSolmuCommand(Window window)
@@ -43,7 +43,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         private void OnSuljeCommand(Window window)
         {
             HideWindow(window);
-            NotifyViewModelResult = NotifyResult.NextLine;
+            NotifyViewModelResult = NotifyResult.Close;
         }
 
         private void HideWindow(Window window)
