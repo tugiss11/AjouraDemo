@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Documents;
 using System.Windows.Threading;
 using ArcGISRuntime.Samples.DesktopViewer.Model;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
@@ -13,13 +12,11 @@ using Catel.IoC;
 using Catel.IO;
 using Catel.Logging;
 using Catel.Messaging;
-using Esri.ArcGISRuntime.Controls;
 using Esri.ArcGISRuntime.Data;
 using Esri.ArcGISRuntime.Geometry;
 using Esri.ArcGISRuntime.Layers;
 using QuickGraph;
 using QuickGraph.Algorithms;
-using Tsp;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -226,9 +223,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             }
 
             List<GraphEdgeClass> edgeList = ShortestPathAlgorithm(root, target);
-            if (!edgeList.Any())
+            if (!edgeList.Any() && (root.ID != target.ID))
             {
-                Graph.RemoveVertex(target);
+                //Graph.RemoveVertex(target);
                 return false;
             }
             AddEdgeListToKokoajaUraList(edgeList);
@@ -646,10 +643,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 }
             }
 
-            foreach (GraphEdgeClass edge in Graph.Edges)
-            {
-                Debug.WriteLine(edge.VisitedCount);
-            }
+            //foreach (GraphEdgeClass edge in Graph.Edges)
+            //{
+            //    Debug.WriteLine(edge.VisitedCount);
+            //}
         }
 
         public void CalculateShortestPaths(List<GraphVertexClass> vertices, GraphVertexClass root, bool calculateOnlyNeighbors)

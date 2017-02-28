@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using ArcGISRuntime.Samples.DesktopViewer.Model;
@@ -120,5 +121,19 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
             }
         }
+
+        public List<T> Query<T>(string whereclause) where T : new()
+        {
+
+            using (var db = Instance.GetSQLiteConnection())
+            {
+                if (Instance.HasTable<T>(db))
+                {
+                    return db.Query<T>(whereclause);
+                }
+                return new List<T>();
+            }
+        }
+
     }
 }

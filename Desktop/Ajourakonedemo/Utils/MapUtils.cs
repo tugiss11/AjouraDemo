@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using ArcGISRuntime.Samples.DesktopViewer.Extensions;
 using ArcGISRuntime.Samples.DesktopViewer.Model;
 using ArcGISRuntime.Samples.DesktopViewer.Services;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.TSP2;
@@ -65,7 +66,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         };
 
         private GraphicsLayer _graphicsLayer;
-        private GraphicsLayer _tspGraphicsLayer;
+        private GraphicsLayer _resultGraphics;
         private GraphicsLayer _tspVerticesLayer;
 
 
@@ -114,18 +115,18 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             set { _graphicsLayer = value; }
         }
 
-        public GraphicsLayer TspGraphicsLayer
+        public GraphicsLayer ResultGraphics
         {
             get
             {
-                if (_tspGraphicsLayer == null)
+                if (_resultGraphics == null)
                 {
-                    _tspGraphicsLayer = new GraphicsLayer { DisplayName = "Result Graphics" };
-                    Map.Layers.Add(TspGraphicsLayer);
+                    _resultGraphics = new GraphicsLayer { DisplayName = "Result Graphics" };
+                    Map.Layers.Add(ResultGraphics);
                 }
-                return _tspGraphicsLayer;
+                return _resultGraphics;
             }
-            set { _tspGraphicsLayer = value; }
+            set { _resultGraphics = value; }
         }
 
         public GraphicsLayer TspVerticesLayer
@@ -694,15 +695,15 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
         public void DrawRoute(object sender, TspEventArgs tspEventArgs)
         {
-            if (TspGraphicsLayer == null)
+            if (ResultGraphics == null)
             {
-                TspGraphicsLayer = new GraphicsLayer();
+                ResultGraphics = new GraphicsLayer();
 
-                Map.Layers.Add(TspGraphicsLayer);
+                Map.Layers.Add(ResultGraphics);
             }
             else
             {
-                TspGraphicsLayer.Graphics.Clear();
+                ResultGraphics.Graphics.Clear();
             }
 
             var symbol = new SimpleLineSymbol
@@ -726,7 +727,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
 
             var polylineUnion = GeometryEngine.Union(polylineList);
             MapViewService.MapView.SetView(polylineUnion);
-            TspGraphicsLayer.Graphics.Add(new Graphic(polylineUnion, symbol));
+            ResultGraphics.Graphics.Add(new Graphic(polylineUnion, symbol));
         }
 
         public void AddVertexToGraphicsLayer(GraphVertexClass vertex)
@@ -903,7 +904,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             };
 
             var geometries = graphics.Where(o => o.Geometry != null).Select(g => g.Geometry);
-            var geometry = GeometryEngine.Union(geometries);
+            var geometry =  GeometryEngine.Union(geometries).ToSr3067();
             if (generalize)
             {
                 geometry = GeometryEngine.Generalize(geometry, 20, false);
@@ -913,16 +914,16 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 geometry = SmoothUtils.Instance.SmoothPolyline((Polyline)geometry);
             }
 
-            var graphic = new Graphic(geometry, new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("ID", id)}, symbol) { IsVisible = false };
+            var graphic = new Graphic(geometry, new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("ID", id)}, symbol) { IsVisible = true };
 
-            TspGraphicsLayer.Graphics.Add(graphic);
+            ResultGraphics.Graphics.Add(graphic);
             return geometry;
 
         }
 
         public void DrawEdgeBetweenIdPair(Tuple<int, int> idPair, TSPVertices tspVertexList)
         {
-            TspGraphicsLayer.Graphics.Clear();
+            ResultGraphics.Graphics.Clear();
             if (idPair == null)
             {
                 return;
@@ -941,7 +942,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             {
                 var idCollection = path.ShortestPathEdges.Select(o => o.Id);
                 var geometryList = (from id in idCollection select GraphicsLayer.Graphics.FirstOrDefault(o => Convert.ToInt32(o.Attributes["FID"]) == id) into graphic where graphic != null select graphic.Geometry).ToList();
-                TspGraphicsLayer.Graphics.Add(new Graphic(GeometryEngine.Union(geometryList), symbol));
+                ResultGraphics.Graphics.Add(new Graphic(GeometryEngine.Union(geometryList), symbol));
             }
 
 
@@ -971,21 +972,21 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
             };
             if (resetGraphics)
             {
-                TspGraphicsLayer.Graphics.Clear();
+                ResultGraphics.Graphics.Clear();
             }
             if (!graphics.Any())
             {
                 return;
             }
 
-            var geometries = graphics.Where(o => o.Geometry != null).Select(g => g.Geometry);
-            var geometry = GeometryEngine.Union(geometries);
+            var geometries =  graphics.Where(o => o.Geometry != null).Select(g => g.Geometry);
+            var geometry = GeometryEngine.Project(GeometryEngine.Union(geometries), new SpatialReference(3067));
             if (geometry.GeometryType == GeometryType.Polyline)
             {
                 var geometryList = SmoothUtils.Instance.SmoothPolyline((Polyline)geometry);
 
                 symbol.Color = GetRandomColor();
-                TspGraphicsLayer.Graphics.Add(new Graphic(geometryList, symbol));
+                ResultGraphics.Graphics.Add(new Graphic(geometryList, symbol));
             }
 
 
@@ -1209,12 +1210,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     {
                         foreach (var lineSegment in part)
                         {
-                            TspGraphicsLayer.Graphics.Clear();
+                            ResultGraphics.Graphics.Clear();
 
                             var geo = new PolylineBuilder(new List<IEnumerable<Segment>>(), Map.SpatialReference);
                             geo.AddPart(new List<Segment>() { lineSegment });
                             var graphic = new Graphic(geo.ToGeometry(), symbol) { IsSelected = true };
-                            TspGraphicsLayer.Graphics.Add(graphic);
+                            ResultGraphics.Graphics.Add(graphic);
 
 
                             var vm = new NotificationViewModel();
@@ -1260,7 +1261,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
         {
 
             var displayname = Path.GetFileName(ConfigurationManager.AppSettings["linedata"]);
-            TspGraphicsLayer.Graphics.Clear();
+            ResultGraphics.Graphics.Clear();
             var geometry = await MapView.Editor.RequestShapeAsync(DrawShape.Polygon);
             var lineLayer = Map.Layers.FirstOrDefault(o => o.DisplayName == displayname) as GraphicsLayer;
             if (lineLayer == null) return;
@@ -1295,7 +1296,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                             if (geo.Parts.Count > 3)
                             {
                                 var graphic = new Graphic(geo.ToGeometry(), symbol) { IsVisible = false };
-                                TspGraphicsLayer.Graphics.Add(graphic);
+                                ResultGraphics.Graphics.Add(graphic);
                                 geo = new PolylineBuilder(new List<IEnumerable<Segment>>(), Map.SpatialReference);
                             }
                             else
@@ -1307,7 +1308,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                     if (geo.Parts.Count > 3)
                     {
                         var graphic = new Graphic(geo.ToGeometry(), symbol) { IsVisible = false };
-                        TspGraphicsLayer.Graphics.Add(graphic);
+                        ResultGraphics.Graphics.Add(graphic);
                     }
                 }
             }
@@ -1326,6 +1327,24 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Utils
                 await fl.InitializeAsync();
                 Map.Layers.Add(fl);
             }
+        }
+
+        public void AddOptRunToResultGraphics(OptimizationRunModel optRun)
+        {
+            var color = GetRandomColor();
+            while (ResultGraphics.Graphics.Any(o => ((SimpleLineSymbol) o.Symbol).Color.Equals(color)))
+            {
+                color = GetRandomColor();
+            }
+            var symbol = new SimpleLineSymbol
+            {
+                Color = color,
+                Style = SimpleLineStyle.Solid,
+                Width = 5
+            };
+            var geometry = Geometry.FromJson(optRun.GeometryJson);
+            var graphic = new Graphic(geometry, new List<KeyValuePair<string, object>>() { new KeyValuePair<string, object>("ID", optRun.ToString()) }, symbol) { IsVisible = true };
+            ResultGraphics.Graphics.Add(graphic);
         }
     }
 }

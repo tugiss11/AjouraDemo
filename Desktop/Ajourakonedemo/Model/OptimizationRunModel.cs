@@ -106,9 +106,26 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
 
         public static readonly PropertyData UseShortestPathsProperty = RegisterProperty("UseShortestPaths", typeof(bool));
 
+        public int Method
+        {
+            get { return GetValue<int>(MethodProperty); }
+            set { SetValue(MethodProperty, value); }
+        }
+
+        public static readonly PropertyData MethodProperty = RegisterProperty("Method", typeof(int));
+
+
+        public string GeometryJson
+        {
+            get { return GetValue<string>(GeometryJsonProperty); }
+            set { SetValue(GeometryJsonProperty, value); }
+        }
+
+        public static readonly PropertyData GeometryJsonProperty = RegisterProperty("GeometryJson", typeof(string));
+
         public override string ToString()
         {
-            return string.Format("ID: {0}-{1}-{2}-{3}", StartVertice, Capacity, SlopeMultiplier, WetnessMultiplier);
+            return string.Format("ID: {0}-{1}-{2}-{3}", Method, UraTotalLength, SlopeMultiplier, WetnessMultiplier);
         }
 
     }

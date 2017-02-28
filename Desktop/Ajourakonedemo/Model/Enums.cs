@@ -11,7 +11,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.Model
         [Description("Using shortest paths")]
         UsingShortestPaths = 2,
         [Description("Using buffered zones")]
-        UsingBuffers = 3
+        UsingBuffers = 3,
+        [Description("Using buffered and visited")]
+        UsingBuffersAndVisited = 4
     }
 
 }

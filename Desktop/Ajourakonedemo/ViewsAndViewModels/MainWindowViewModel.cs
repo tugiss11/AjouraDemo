@@ -8,10 +8,12 @@ using System.Linq;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 using ArcGISRuntime.Samples.DesktopViewer.Utils;
 using ArcGISRuntime.Samples.DesktopViewer.Utils.GoogleTSP;
@@ -27,6 +29,7 @@ using Esri.ArcGISRuntime.Symbology;
 using IronPython.Hosting;
 
 using Microsoft.Scripting.Hosting;
+using Geometry = Esri.ArcGISRuntime.Geometry.Geometry;
 
 
 namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
@@ -48,6 +51,8 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         public Command ShortestPathCommand { get; private set; }
 
         public Command RunAllCommand { get; private set; }
+
+        public Command UnionCommand { get; private set; }
 
         public Command PythonCommand { get; private set; }
 
@@ -129,7 +134,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                         graphic.IsVisible = false;
                     }
                     value.IsVisible = true;
-                    ValittuRoute = Routes.FirstOrDefault(o => o.Id == Convert.ToInt32(value.Attributes["ID"]));
+                    if (Routes != null)
+                    {
+                        ValittuRoute = Routes.FirstOrDefault(o => o.Id == Convert.ToInt32(value.Attributes["ID"]));
+                    }
                 }
                 else
                 {
@@ -373,8 +381,6 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             GraphUtils.Instance.WetnessWeightMultiplier = (int)e.NewValue;
         }
 
-
-
         public bool UseVisitedEdges
         {
             get { return GetValue<bool>(UseVisitedEdgesProperty); }
@@ -386,6 +392,17 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         }
 
         public static readonly PropertyData UseVisitedEdgesProperty = RegisterProperty("UseVisitedEdges", typeof(bool), true);
+
+        public bool Debugging
+        {
+            get { return GetValue<bool>(DebuggingProperty); }
+            set
+            {
+                SetValue(DebuggingProperty, value);
+            }
+        }
+
+        public static readonly PropertyData DebuggingProperty = RegisterProperty("Debugging", typeof(bool), true);
 
 
         public bool CalculateOnlyNeighbors
@@ -414,13 +431,14 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         {
             InitialPopulation = 10000;
             TotalGenerations = 210000;
-            KokoajauraBufferValue = 175;
-            MaxAllowedSlope = 15;
-            MaxAllowedForwardSlope = 40;
+            KokoajauraBufferValue = 46;
+            MaxAllowedSlope = 20;
+            MaxAllowedForwardSlope = 25;
             UseVisitedEdges = true;
-            VisitedCount = 10;
+            VisitedCount = 5;
             CalculateOnlyNeighbors = false;
             VisitedMultiplier = 0.25;
+            Debugging = true;
         }
 
         private void InitMessages()
@@ -468,7 +486,95 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             RunAllCommand = new Command(OnRunAllCommand);
             TraceLineCommand = new Command(OnTraceLineCommand);
             GetRoutesCommand = new Command(OnGetRoutesCommand);
+            UnionCommand = new Command(OnUnionCommand);
+            SimplifyResultCommand = new Command(OnSimplifyResultCommand);
+            LoadAllCommand = new Command(OnLoadAllCommand);
 
+        }
+
+        private void OnLoadAllCommand()
+        {
+            MapUtils.Instance.ResultGraphics.Graphics.Clear();
+            
+            var optRuns = SqliteUtils.Instance.Query<OptimizationRunModel>("select * from OptimizationRunModel");
+            foreach (var optRun in optRuns)
+            {
+                MapUtils.Instance.AddOptRunToResultGraphics(optRun);
+            }
+            ResultGraphics = MapUtils.Instance.ResultGraphics.Graphics;
+        }
+
+        public Command LoadAllCommand { get; set; }
+
+        private void OnSimplifyResultCommand()
+        {
+            foreach (var graphic in MapUtils.Instance.ResultGraphics.Graphics)
+            {
+                graphic.Geometry = GeometryEngine.Generalize(graphic.Geometry, 10, false);
+            }
+
+        }
+
+        public Command SimplifyResultCommand { get; set; }
+
+        private void OnUnionCommand()
+        {
+            if (MapUtils.Instance.ResultGraphics.Graphics.Any())
+            {
+                var symbol = new SimpleLineSymbol
+                {
+                    Color = Colors.Red,
+                    Style = SimpleLineStyle.Solid,
+                    Width = 5
+                };
+                var geo = GeometryEngine.Union(MapUtils.Instance.ResultGraphics.Graphics.Where(g => g.Geometry != null).Select(o => o.Geometry));
+                var newGraphic = new Graphic(geo, symbol);
+                newGraphic.Geometry = ConnectLooseEnds(geo);
+
+                MapUtils.Instance.ResultGraphics.Graphics.Clear();
+                MapUtils.Instance.ResultGraphics.Graphics.Add(newGraphic);
+
+
+
+            }
+        }
+
+        private Geometry ConnectLooseEnds(Geometry geo)
+        {
+            var polyline = geo as Polyline;
+            PolylineBuilder polylineBuilder = null;
+            if (polyline != null)
+            {
+                polylineBuilder = new PolylineBuilder(polyline.Parts);
+                foreach (var part in polyline.Parts)
+                {
+                    bool disconnected = false;
+                    var otherParts = new PolylineBuilder(polyline.Parts.Where(o => (o.StartPoint != part.StartPoint) && (o.EndPoint != part.EndPoint))).ToGeometry();
+                    MapPoint disconnectPoint = null;
+                    if (!GeometryEngine.Intersects(part.StartPoint, otherParts))
+                    {
+                        disconnected = true;
+                        disconnectPoint = part.StartPoint;
+
+                    }
+                    else if (!GeometryEngine.Intersects(part.EndPoint, otherParts))
+                    {
+                        disconnected = true;
+                        disconnectPoint = part.EndPoint;
+
+                    }
+
+
+                    if (disconnected)
+                    {
+                        var proximityResult = GeometryEngine.NearestVertex(otherParts, disconnectPoint);
+                        polylineBuilder.AddPart(new List<MapPoint>() { proximityResult.Point, disconnectPoint });
+                    }
+
+                }
+            }
+            if (polylineBuilder != null) return polylineBuilder.ToGeometry();
+            return geo;
         }
 
         private async void OnGetRoutesCommand()
@@ -476,7 +582,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             try
             {
                 await MapUtils.Instance.GetRoutesAsync();
-                ResultGraphics = MapUtils.Instance.TspGraphicsLayer.Graphics;
+                ResultGraphics = MapUtils.Instance.ResultGraphics.Graphics;
             }
             catch (Exception ex)
             {
@@ -499,24 +605,50 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private async void OnRunAllCommand()
         {
-            var taskList = new List<Task<OptimizationRunModel>>();
-            foreach (var optRun in Optimizations)
-            {
-                var task = Task.Run(() => StartOptRunAndCalculations(optRun));
-                taskList.Add(task);
-            }
+            //var taskList = new List<Task<OptimizationRunModel>>();
+            //foreach (var optRun in Optimizations)
+            //{
+            //    var task = Task.Run(() => StartOptRunAndCalculations(optRun));
+            //    taskList.Add(task);
+            //}
 
-            var resultList = await Task.WhenAll(taskList);
-            OptimizationRunModel smallest = null;
-            foreach (var result in resultList)
+            //var resultList = await Task.WhenAll(taskList);
+            //OptimizationRunModel smallest = null;
+            //foreach (var result in resultList)
+            //{
+            //    if (smallest == null || result.UraTotalLength < smallest.UraTotalLength)
+            //    {
+            //        smallest = result;
+            //    }
+            //}
+            Debugging = false;
+            var startingVertex = await InitShortestPathCommand();
+            while (WetnessWeightMultiplier < 30)
             {
-                if (smallest == null || result.UraTotalLength < smallest.UraTotalLength)
+
+                var methods = Enum.GetValues(typeof(KookoajauraTyyppi)).Cast<KookoajauraTyyppi>();
+                ;
+                foreach (var method in methods)
                 {
-                    smallest = result;
+                    var optRun = new OptimizationRunModel();
+                    GraphUtils.Instance.KokoojauraList = new List<List<GraphEdgeClass>>();
+                    GraphUtils.Instance.ResetVisited();
+                    MapUtils.Instance.GraphicsLayer.ClearSelection();
+
+                    await RunKokoojauraMethod(method, startingVertex);
+                    var geo = DrawResult(false);
+                    optRun.UraTotalLength = KokooajaUraTotalLength;
+                    optRun.GeometryJson = geo.ToJson();
+                    optRun.SlopeMultiplier = SlopeWeightMultiplier;
+                    optRun.WetnessMultiplier = WetnessWeightMultiplier;
+                    optRun.Method = (int) method;
+                    SqliteUtils.Instance.Insert(optRun);
                 }
+                WetnessWeightMultiplier = WetnessWeightMultiplier + 1;
             }
 
         }
+
 
         private async Task<OptimizationRunModel> StartOptRunAndCalculations(OptimizationRunModel optRun)
         {
@@ -613,13 +745,12 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                         CalculateRouteDetails(orderlist, id, geo, optRun.Vertices.ToArray(), matkat);
                     }
                     id++;
-
                 }
 
-                ResultGraphics = MapUtils.Instance.TspGraphicsLayer.Graphics;
-                if (!MapUtils.Instance.Map.Layers.ContainsLayer(MapUtils.Instance.TspGraphicsLayer))
+                ResultGraphics = MapUtils.Instance.ResultGraphics.Graphics;
+                if (!MapUtils.Instance.Map.Layers.ContainsLayer(MapUtils.Instance.ResultGraphics))
                 {
-                    MapUtils.Instance.Map.Layers.Add(MapUtils.Instance.TspGraphicsLayer);
+                    MapUtils.Instance.Map.Layers.Add(MapUtils.Instance.ResultGraphics);
                 }
                 if (!MapUtils.Instance.Map.Layers.ContainsLayer(MapUtils.Instance.TspVerticesLayer))
                 {
@@ -688,7 +819,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
         {
             List<GraphVertexClass> vertices = null;
             GraphVertexClass root = null;
-
+            MapUtils.Instance.ResultGraphics.Graphics.Clear();
             var optRun = new OptimizationRunModel();
             optRun.UseVisitedEdges = UseVisitedEdges;
             optRun.Capacity = VertexGroupSize;
@@ -744,27 +875,80 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private async void OnShortestPathOnAllCommand()
         {
-            switch (ValittuKokoojauratyyppi)
+            var methodType = ValittuKokoojauratyyppi;
+            this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage(string.Format("Started calculating Kokoojaurat...({0})", ValittuKokoojauratyyppi), "UpdateStatusBar");
+            await RunKokoojauraMethod(methodType);
+            MapUtils.Instance.ResultGraphics.Graphics.Clear();
+            DrawResult(false);
+            this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage(string.Format("Done calculating Kokoojaurat...({0})", ValittuKokoojauratyyppi), "UpdateStatusBar");
+
+        }
+
+        private async Task RunKokoojauraMethod(KookoajauraTyyppi methodType, MapPoint startingVertex = null)
+        {
+            if (startingVertex == null)
+            {
+                startingVertex = await InitShortestPathCommand();
+            }
+            switch (methodType)
             {
                 case KookoajauraTyyppi.UsingShortestPaths:
-                    await CalculateKokoojatUsingShortestPathsAsync();
+                    CalculateKokoojatUsingShortestPathsAsync(startingVertex);
                     break;
                 case KookoajauraTyyppi.UsingBuffers:
-                    await CalculateKokoojatUratUsingBuffersAsync();
+                    await CalculateKokoojatUratUsingBuffersAsync(startingVertex);
                     break;
                 case KookoajauraTyyppi.UsingVisitedEdges:
-                    await CalculateKokoojatUratUsingVisitedEdges();
+                    await CalculateKokoojatUratUsingVisitedEdges(startingVertex);
+                    break;
+                case KookoajauraTyyppi.UsingBuffersAndVisited:
+                    await CalculateKokoojatUratUsingBuffersAndVisitedAsync(startingVertex);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            CalculateKokoajaUraTotalLength();
         }
 
-        private async Task CalculateKokoojatUratUsingVisitedEdges()
+        private async Task CalculateKokoojatUratUsingBuffersAndVisitedAsync(MapPoint startingVertex)
         {
             List<MapPoint> pisteJoukko = new List<MapPoint>(GraphUtils.Instance.GraphVerticesAsMapPoint);
             var showDialog = true;
-            var startingVertex = await InitShortestPathCommand();
+         
+            if (startingVertex == null)
+            {
+                return;
+            }
+            while (GraphUtils.Instance.CheckIfKokoajaUratCoverTheKuvio(ref pisteJoukko, KokoajauraBufferValue))
+            {
+                var endingVertex = MapUtils.Instance.FindFarmostPointInsideListOfPoint(startingVertex, pisteJoukko);
+                if (endingVertex != null)
+                {
+                    GraphUtils.Instance.AddKokoajauraFromStartPointToEndPoint(startingVertex, endingVertex);
+                    GraphUtils.Instance.SetKokoajauratAsVisitedAndResetShortestPaths();
+                    if (Debugging)
+                    {
+                        showDialog = await ShowDialog(showDialog);
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            IEnumerable<GraphEdgeClass> edges = GetEdgesWithVisitedCount();
+            UpdateKokoojatUrat(edges);
+
+            MapUtils.Instance.HighlightEdges(edges);
+            CalculateKokoajaUraTotalLength();
+        }
+
+        private async Task CalculateKokoojatUratUsingVisitedEdges(MapPoint startingVertex)
+        {
+            List<MapPoint> pisteJoukko = new List<MapPoint>(GraphUtils.Instance.GraphVerticesAsMapPoint);
+            var showDialog = true;
+  
             if (startingVertex == null)
             {
                 return;
@@ -775,8 +959,10 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                 pisteJoukko.Remove(endingVertex);
                 GraphUtils.Instance.AddKokoajauraFromStartPointToEndPoint(startingVertex, endingVertex);
                 GraphUtils.Instance.SetKokoajauratAsVisitedAndResetShortestPaths();
-
-                showDialog = await ShowDialog(showDialog);
+                if (Debugging)
+                {
+                    showDialog = await ShowDialog(showDialog);
+                }
 
             }
             MapUtils.Instance.HighlightEdges(GraphUtils.Instance.KokoojauraList.SelectMany(o => o));
@@ -811,9 +997,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             return retValue;
         }
 
-        private async Task CalculateKokoojatUsingShortestPathsAsync()
+        private void CalculateKokoojatUsingShortestPathsAsync(MapPoint startingVertex)
         {
-            var startingVertex = await InitShortestPathCommand();
+          
 
             var edges = GetEdgesFromKokooajaUrat(startingVertex);
 
@@ -846,7 +1032,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             GraphUtils.Instance.GetCountForEachEdgeInKokoajatUrat();
 
 
-            var edges = GraphUtils.Instance.Graph.Edges.Where(c => c.VisitedCount > visitedCountLimit);
+            var edges = GraphUtils.Instance.Graph.Edges.Where(c => c.VisitedCount >= visitedCountLimit);
 
 
             return edges.ToList();
@@ -893,7 +1079,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                 this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage("Nothing to draw", "UpdateStatusBar");
                 return;
             }
-            MapUtils.Instance.ShowSmoothened(MapUtils.Instance.TspGraphicsLayer.Graphics.ToList(), true);
+            MapUtils.Instance.ShowSmoothened(MapUtils.Instance.ResultGraphics.Graphics.ToList(), true);
             this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage("Smoothen done", "UpdateStatusBar");
         }
 
@@ -941,7 +1127,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
                 return false;
             }
 
-            if (MapUtils.Instance.TspGraphicsLayer != null && MapUtils.Instance.TspGraphicsLayer.Graphics.Any())
+            if (MapUtils.Instance.ResultGraphics != null && MapUtils.Instance.ResultGraphics.Graphics.Any())
             {
                 return true;
             }
@@ -956,7 +1142,7 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
 
         private void OnClearGeneralizationCommand()
         {
-            MapUtils.Instance.TspGraphicsLayer.Graphics.Clear();
+            MapUtils.Instance.ResultGraphics.Graphics.Clear();
         }
 
         private void OnDrawResultCommand()
@@ -969,15 +1155,16 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             DrawResult(true);
         }
 
-        private void DrawResult(bool generalize)
+        private Geometry DrawResult(bool generalize)
         {
             if (!MapUtils.Instance.GraphicsLayer.SelectedGraphics.Any())
             {
                 this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage("Nothing to draw", "UpdateStatusBar");
-                return;
+                return null;
             }
-            MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, generalize);
+            var geo = MapUtils.Instance.ShowGeneralizedRoutes(MapUtils.Instance.GraphicsLayer.SelectedGraphics, generalize, Colors.Red);
             this.GetDependencyResolver().Resolve<IMessageMediator>().SendMessage("Drawing done", "UpdateStatusBar");
+            return geo;
         }
 
         private void OnToggleGraphicsCommand()
@@ -1180,25 +1367,31 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             return true;
         }
 
-        private async Task CalculateKokoojatUratUsingBuffersAsync()
+        private async Task CalculateKokoojatUratUsingBuffersAsync(MapPoint startingVertex)
         {
             List<MapPoint> pisteJoukko = GraphUtils.Instance.GraphVerticesAsMapPoint;
 
-            var startingVertex = await InitShortestPathCommand();
+          
             if (startingVertex == null)
             {
                 return;
             }
-
+            bool showDialog = true;
             while (GraphUtils.Instance.CheckIfKokoajaUratCoverTheKuvio(ref pisteJoukko, KokoajauraBufferValue))
             {
                 var endingVertex = MapUtils.Instance.FindFarmostPointInsideListOfPoint(startingVertex, pisteJoukko);
+             
                 if (endingVertex != null)
                 {
                     var success = GraphUtils.Instance.AddKokoajauraFromStartPointToEndPoint(startingVertex, endingVertex);
                     if (!success)
                     {
                         pisteJoukko.Remove(endingVertex);
+                    }
+                    if (Debugging)
+                    {
+                        MapUtils.Instance.HighlightEdges(GraphUtils.Instance.KokoojauraList.SelectMany(o => o), false);
+                        showDialog = await ShowDialog(showDialog);
                     }
                 }
                 else
@@ -1216,8 +1409,9 @@ namespace ArcGISRuntime.Samples.DesktopViewer.ViewsAndViewModels
             MessageMediator.SendMessage("Set storage location", "NaytaInfoboksiKayttajalle");
             GraphUtils.Instance.KokoojauraList = new List<List<GraphEdgeClass>>();
             GraphUtils.Instance.ResetVisited();
+            MapUtils.Instance.GraphicsLayer.ClearSelection();
             var startingVertex = await MapUtils.Instance.GetPointFromMap();
-            GraphUtils.Instance.SetKokoajauratAsVisitedAndResetShortestPaths();
+
             return startingVertex;
         }
 

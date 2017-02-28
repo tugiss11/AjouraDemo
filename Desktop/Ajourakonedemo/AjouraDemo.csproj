@@ -201,6 +201,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="BooleanToVisibilityConverter.cs" />
+    <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Model\Enums.cs" />
     <Compile Include="Model\GraphClass.cs" />
     <Compile Include="Model\GraphClassBidirectional.cs" />
